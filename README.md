@@ -14,3 +14,18 @@ A Dash-based web application for monitoring coral data.
    ```bash
    git clone https://github.com/yourusername/coral-monitoring-dash.git
    cd coral-monitoring-dash
+
+
+## Structure
+coral-dash/
+├── app.py                # Main app file
+├── assets/               # CSS/JS/Images
+│   └── styles.css
+├── components/           # Reusable components
+│   ├── sidebar.py
+│   └── map_controls.py
+├── data/                 # Data processing
+│   ├── database.py
+│   └── processors.py
+└── pages/                # Different views
+    └── map_view.py   
