@@ -1,58 +1,54 @@
 import pandas as pd
-import geopandas as gpd
-from shapely import wkt
-from functools import lru_cache
 from config.database import db
+from sqlalchemy import text
 
 class CoralDataService:
-    @lru_cache(maxsize=1)
     def get_combined_data(self):
-        """Combine data from all tables with proper geospatial handling"""
+        """Combine data from your main tables"""
         localities = self._get_locality_data()
         occurrences = self._get_occurrence_data()
-        management = self._get_management_data()
         
-        # Merge data (example - adjust based on your relationships)
+        # Simple merge - adjust based on your relationships
         df = pd.merge(
             occurrences,
-            localities[['locality_id', 'geometry']],
+            localities[['locality_id', 'name', 'coords_local']],
             on='locality_id',
             how='left'
         )
         
-        # Add management data
-        df = pd.merge(
-            df,
-            management,
-            on='locality_id',
-            how='left'
-        )
+        # Convert coordinates if needed
+        if 'coords_local' in df.columns:
+            df[['latitude', 'longitude']] = df['coords_local'].apply(
+                self._parse_coordinates
+            )
         
-        # Convert to GeoDataFrame
-        gdf = gpd.GeoDataFrame(df, geometry='geometry')
-        return gdf
+        return df
 
     def _get_locality_data(self):
-        query = "SELECT locality_id, coords_local, name, date FROM data_coralsol_locality"
-        df = self._execute_query(query)
-        df['geometry'] = df['coords_local'].apply(wkt.loads)
-        return gpd.GeoDataFrame(df, geometry='geometry')
+        """Get locality data from database"""
+        with db.get_session() as session:
+            result = session.execute(text("""
+                SELECT locality_id, name, coords_local 
+                FROM data_coralsol_locality
+            """))
+            return pd.DataFrame(result.fetchall(), columns=result.keys())
 
     def _get_occurrence_data(self):
-        query = """SELECT occurrence_id, locality_id, spot_coords, date, 
-                   depth, superficie_photo FROM data_coralsol_occurrence"""
-        df = self._execute_query(query)
-        df['geometry'] = df['spot_coords'].apply(wkt.loads)
-        return gpd.GeoDataFrame(df, geometry='geometry')
-
-    def _get_management_data(self):
-        query = """SELECT management_id, locality_id, management_coords, 
-                   observer, managed_mass_kg, date FROM data_coralsol_management"""
-        df = self._execute_query(query)
-        df['geometry'] = df['management_coords'].apply(wkt.loads)
-        return gpd.GeoDataFrame(df, geometry='geometry')
-
-    def _execute_query(self, query):
+        """Get occurrence data from database"""
         with db.get_session() as session:
-            result = session.execute(text(query))
+            result = session.execute(text("""
+                SELECT occurrence_id, locality_id, date, value 
+                FROM data_coralsol_occurrence
+            """))
             return pd.DataFrame(result.fetchall(), columns=result.keys())
+
+    def _parse_coordinates(self, coord_string):
+        """Simple coordinate parser - adjust for your format"""
+        # Example: "(-8.052, -34.928)" → (-8.052, -34.928)
+        if not coord_string:
+            return (None, None)
+        try:
+            lat, lon = map(float, coord_string.strip("()").split(","))
+            return (lat, lon)
+        except:
+            return (None, None)
