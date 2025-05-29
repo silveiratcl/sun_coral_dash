@@ -20,6 +20,9 @@ def build_map_figure(selected_localities=None):
     print("Merged:", localities.shape)
     print(localities[['locality_id', 'name', 'DPUE']].head())
 
+    # For localities with no DPUE, set a default color or marker
+    localities['DPUE'] = localities['DPUE'].fillna(0)  # or np.nan, as you prefer
+
     # Filter by selected_localities if provided
     if selected_localities and 0 not in selected_localities:
         localities = localities[localities['locality_id'].isin(selected_localities)]
@@ -96,7 +99,7 @@ def build_map_figure(selected_localities=None):
         mapbox_style="open-street-map",
         mapbox_zoom=8,
         mapbox_center={"lat": mean_lat, "lon": mean_lon},
-        margin={"r":10,"t":10,"l":10,"b":10},
+        margin={"r":10,"t":30,"l":10,"b":10},
         height=600
     )    
     return fig

@@ -46,5 +46,6 @@ cs_controls = dbc.Row([
                 ],
                 value="dpue",
                 placeholder="Select Indicator"
-            )
+            ),
+            #html.Button("Ver Métodos", id="show-methods-btn", n_clicks=0, style={"margin-top": "20px"}),
     ])

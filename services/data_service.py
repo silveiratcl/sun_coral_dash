@@ -21,10 +21,13 @@ class CoralDataService:
         df[['LATITUDE', 'LONGITUDE']] = df['coords_local'].apply(parse_coords).apply(pd.Series)
         return df  # <-- Do NOT drop 'coords_local'
 
-    def get_dafor_data(self):
+    def get_dafor_data(self, start_date=None, end_date=None):
         query = "SELECT Dafor_id, Locality_id, Dafor_coords, Date, Dafor_value FROM data_coralsol_dafor"
         df = pd.read_sql(query, db.engine)
         df.columns = df.columns.str.lower()  # Standardize to lowercase
+        if start_date and end_date:
+            df['date'] = pd.to_datetime(df['date'])
+            df = df[(df['date'] >= start_date) & (df['date'] <= end_date)]
         return df
 
         
@@ -41,10 +44,10 @@ class CoralDataService:
         except Exception:
             return 0
 
-    def get_dpue_by_locality(self):
+    def get_dpue_by_locality(self, start_date=None, end_date=None):
         # Fetch data
         df_locality = self.get_locality_data()
-        df_dafor = self.get_dafor_data()
+        df_dafor = self.get_dafor_data(start_date, end_date)
 
         # Calculate locality length
         df_locality['locality_length_m'] = df_locality['coords_local'].apply(self.calculate_locality_length)
@@ -66,7 +69,7 @@ class CoralDataService:
         df_dpue['Nhoras'] = df_dpue['Nmin'] / 60
 
         # Merge with locality data
-        df_dpue = df_dpue.merge(df_locality[['locality_id', 'Uni100m']], left_on='locality_id', right_on='locality_id', how='left')
+        df_dpue = df_dpue.merge(df_locality[['locality_id', 'name', 'Uni100m']], left_on='locality_id', right_on='locality_id', how='left')
         df_dpue['DPUE'] = df_dpue['Ndetec'] / (df_dpue['Nhoras'] * df_dpue['Uni100m'])
 
         return df_dpue
