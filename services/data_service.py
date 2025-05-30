@@ -33,6 +33,8 @@ class CoralDataService:
         
 
     def calculate_locality_length(self, coords_local):
+        """Calculate the length of a locality based on its coordinates."""        
+
         try:
             coords = json.loads(coords_local)
             if not coords or len(coords) < 2:
@@ -45,6 +47,8 @@ class CoralDataService:
             return 0
 
     def get_dpue_by_locality(self, start_date=None, end_date=None):
+        """Calculate DPUE (Detections Per Unit Effort) by locality within a date range."""        
+
         # Fetch data
         df_locality = self.get_locality_data()
         df_dafor = self.get_dafor_data(start_date, end_date)
@@ -73,5 +77,57 @@ class CoralDataService:
         df_dpue['DPUE'] = df_dpue['Ndetec'] / (df_dpue['Nhoras'] * df_dpue['Uni100m'])
 
         return df_dpue
+    
+    def get_dafor_value_histogram_data(self, start_date=None, end_date=None):
+        """
+        Prepares DAFOR values for histogram plotting (density of values in the DAFOR scale 1-10).
+        Args:
+            start_date (str or datetime, optional): The start date for filtering the data. Defaults to None.
+            end_date (str or datetime, optional): The end date for filtering the data. Defaults to None.
+        Returns:
+            pandas.Series: A Series of all DAFOR values (flattened, numeric, NaNs dropped).
+        """
+        df_dafor = self.get_dafor_data(start_date, end_date)
+        # Split and flatten dafor_value column
+        df_dafor['dafor_value'] = df_dafor['dafor_value'].apply(
+            lambda x: [pd.to_numeric(i, errors='coerce') for i in str(x).split(',')]
+        )
+        values = pd.to_numeric(pd.Series([v for sublist in df_dafor['dafor_value'] for v in sublist]), errors='coerce')
+        values = values.dropna()
+        # Optionally filter to 1-10 range
+        values = values[(values >= 0) & (values <= 10)]
+        return values
 
 
+    def get_sum_of_dafor_by_locality(self, start_date=None, end_date=None):
+        """
+        Calculates the sum of DAFOR values by locality and date within an optional date range.
+        Args:
+            start_date (str or datetime, optional): The start date for filtering the data. Defaults to None.
+            end_date (str or datetime, optional): The end date for filtering the data. Defaults to None.
+        Returns:
+            pandas.DataFrame: A DataFrame with columns ['locality_id', 'date', 'DAFOR'], where 
+            'DAFOR' is the sum of DAFOR values for each locality and date within the specified range.
+        """
+        # Fetch locality and DAFOR data
+        df_locality = self.get_locality_data()
+        df_dafor_sum = self.get_dafor_data(start_date, end_date)
+        
+        df_dafor_sum['dafor_value'] = df_dafor_sum['dafor_value'].apply(
+            lambda x: [pd.to_numeric(i, errors='coerce') for i in str(x).split(',')]
+        )
+        df_dafor_sum = df_dafor_sum.explode('dafor_value')
+        df_dafor_sum['dafor_value'] = pd.to_numeric(df_dafor_sum['dafor_value'], errors='coerce')
+
+        # Group by locality and date
+        df_dafor_sum = df_dafor_sum.groupby(['locality_id', 'date']).agg(
+            DAFOR=('dafor_value', 'sum')
+        ).reset_index()
+
+        # Merge with locality data
+        df_dafor_sum = df_dafor_sum.merge(df_locality[['locality_id', 'name']], left_on='locality_id', right_on='locality_id', how='left')
+       
+        # Fill NaN values in DAFOR with 0
+        df_dafor_sum['DAFOR'] = df_dafor_sum['DAFOR'].fillna(0)
+
+        return df_dafor_sum[['locality_id', 'name', 'date', 'DAFOR']]

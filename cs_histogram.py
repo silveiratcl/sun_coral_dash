@@ -6,6 +6,10 @@ import plotly.express as px
 
 
 def build_histogram_figure(dpue_df):
+    """
+    Builds a histogram figure for DPUE values using Plotly Express.
+    """
+    
     import plotly.express as px
 
     # Handle empty or all-NaN DPUE
@@ -35,8 +39,12 @@ def build_histogram_figure(dpue_df):
     return fig
 
 def build_locality_bar_figure(dpue_df):
-    import plotly.express as px
-    import plotly.graph_objects as go
+    """
+    Builds a horizontal bar chart for DPUE values by locality using Plotly Express.
+    """
+    
+    #import plotly.express as px
+    #import plotly.graph_objects as go
 
     if dpue_df.empty or dpue_df["DPUE"].dropna().empty:
         fig = go.Figure()
@@ -54,6 +62,7 @@ def build_locality_bar_figure(dpue_df):
     df_sorted = df_sorted[df_sorted["DPUE"] > 0]
     df_sorted = df_sorted.sort_values("DPUE", ascending=False)
     y_col = "name" if "name" in df_sorted.columns else "locality_id"
+    
 
     df_sorted[y_col] = df_sorted[y_col].astype(str)
     df_sorted[y_col] = pd.Categorical(df_sorted[y_col], categories=df_sorted[y_col], ordered=True)
@@ -69,6 +78,95 @@ def build_locality_bar_figure(dpue_df):
     )
     #fig.update_traces(textposition='inside', insidetextanchor='start')
     fig.update_traces( insidetextanchor='start')
+    fig.update_layout(
+        yaxis=dict(autorange="reversed", showticklabels=False),
+        yaxis_title=None,
+        margin={"r":10,"t":20,"l":10,"b":40},
+        height=500
+    )
+    return fig
+
+def build_dafor_histogram_figure(dafor_values):
+    """
+    Builds a histogram figure for DAFOR values using Plotly Express,
+    mapping numeric values to DAFOR scale labels.
+    """
+    # Handle empty or all-NaN DAFOR values
+    if dafor_values.empty or dafor_values.dropna().empty:
+        return go.Figure()  # Return an empty figure
+
+    # Define the mapping
+    dafor_map = {
+        10: "D",
+        8: "A",
+        6: "F",
+        4: "O",
+        2: "R",
+        0: "Ausente"
+    }
+
+    # Map numeric values to labels, keep only defined values
+    dafor_labels = dafor_values.map(dafor_map).dropna()
+
+    # Define the order for the categories
+    category_order = [ "D", "A", "F", "O", "R", "Ausente"]
+
+    fig = px.histogram(
+        x=dafor_labels,
+        category_orders={"x": category_order},
+        template="plotly_dark",
+    )
+
+    fig.update_layout(
+        bargap=0.1,
+        margin={"r":10,"t":20,"l":10,"b":40},
+        height=180,
+        yaxis_title="Contagem",
+        xaxis_title="IAR-DAFOR",
+    )
+    return fig
+
+
+def build_dafor_sum_bar_figure(df_dafor_sum):
+    """
+    Builds a horizontal bar chart for the sum of DAFOR values by locality using Plotly Express.
+    Expects a DataFrame with columns: ['locality_id', 'name', 'date', 'DAFOR'].
+    """
+    import plotly.express as px
+    import plotly.graph_objects as go
+
+    if df_dafor_sum.empty or df_dafor_sum["DAFOR"].dropna().empty:
+        fig = go.Figure()
+        fig.update_layout(
+            template="plotly_dark",
+            xaxis_title="Soma DAFOR",
+            yaxis_title=None,
+            yaxis_showticklabels=False,
+            margin={"r":10,"t":20,"l":10,"b":40},
+            height=300
+        )
+        return fig
+
+    # Group by locality to get the total sum per locality (across all dates)
+    df_grouped = df_dafor_sum.groupby(['locality_id', 'name'], as_index=False)['DAFOR'].sum()
+    df_grouped = df_grouped[df_grouped["DAFOR"] > 0]
+    df_grouped = df_grouped.sort_values("DAFOR", ascending=False)
+
+    # Ensure 'name' is string and categorical for ordering
+    df_grouped['name'] = df_grouped['name'].astype(str)
+    df_grouped['name'] = pd.Categorical(df_grouped['name'], categories=df_grouped['name'], ordered=True)
+
+    fig = px.bar(
+        df_grouped,
+        x="DAFOR",
+        y="name",
+        orientation="h",
+        template="plotly_dark",
+        labels={"DAFOR": "Soma DAFOR por Localidade", "name": "Localidade"},
+        text="name",
+    )
+    fig.update_traces( insidetextanchor='start')
+    #fig.update_traces(textposition='inside', insidetextanchor='middle')
     fig.update_layout(
         yaxis=dict(autorange="reversed", showticklabels=False),
         yaxis_title=None,
