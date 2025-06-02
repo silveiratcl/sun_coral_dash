@@ -1,7 +1,13 @@
+import dash
 from dash import Dash, html, dcc, Input, Output
 import dash_bootstrap_components as dbc
 import dash_html_components as html
-from cs_map import build_dafor_sum_map_figure, build_map_figure
+from cs_map import (
+    build_dafor_sum_map_figure,
+    build_map_figure,
+    build_occurrence_map_figure
+)
+
 from cs_controllers import cs_controls
 from services.data_service import CoralDataService
 from dash import Dash, html, dcc, Input, Output
@@ -11,17 +17,24 @@ from cs_histogram import (
     build_histogram_figure,
     build_locality_bar_figure, 
     build_dafor_histogram_figure,
-    build_dafor_sum_bar_figure
+    build_dafor_sum_bar_figure, 
 )
 
 from services.data_service import CoralDataService
 #from cs_methods import methods_layout
 from dash import ctx
 import plotly.graph_objects as go
-from dash.dependencies import Output
+from dash.dependencies import Output, State
+from dash import callback, no_update
+from flask import send_from_directory, Flask
 
+# Initialize the Dash app with Bootstrap theme
+app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+server = app.server
 
-
+@server.route('/Upload/UploadImageCoralSol/<occurrence_id>/<filename>')
+def serve_image(occurrence_id, filename):
+    return send_from_directory(f'Upload/UploadImageCoralSol/{occurrence_id}', filename)
 
 # Define dashboard_layout 
 dashboard_layout = html.Div([
@@ -32,9 +45,19 @@ dashboard_layout = html.Div([
     html.Div(dcc.Loading(dcc.Graph(id="cs-dafor-sum-bar-graph"), type="circle"), id="div-dafor-sum-bar"),
 ])
 
+# Define the modal for displaying occurrence details
+modal = dbc.Modal(
+    [
+        dbc.ModalHeader("Detalhes da Ocorrência"),
+        dbc.ModalBody(id="modal-body"),
+        dbc.ModalFooter(
+            dbc.Button("Fechar", id="close-modal", className="ml-auto")
+        ),
+    ],
+    id="modal",
+    is_open=False,
+)
 
-app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
-server = app.server ### included this line to set the server variable
 
 
 
@@ -49,7 +72,9 @@ app.layout = dbc.Container(
             dbc.Col([
                 dashboard_layout
             ], md=9),
-        ])
+            
+        ]),
+        modal # <--  modal here, outside the Row so it overlays the whole page
     ],
     fluid=True,
 )
@@ -125,6 +150,16 @@ def update_visuals(indicator, selected_localities, start_date, end_date):
         dafor_hist_style = style_show
         dafor_sum_bar_style = style_show
 
+    elif indicator == "occurrences":
+        occurrences_df = service.get_occurrences_data(start_date, end_date)
+        fig_map = build_occurrence_map_figure(occurrences_df)
+        # Hide other charts
+        fig_hist = go.Figure()
+        fig_bar = go.Figure()
+        fig_dafor_hist = go.Figure()
+        fig_dafor_sum_bar = go.Figure()
+        hist_style = bar_style = dafor_hist_style = dafor_sum_bar_style = style_hide
+
     else:
         hist_style = bar_style = dafor_hist_style = dafor_sum_bar_style = style_hide
 
@@ -132,6 +167,46 @@ def update_visuals(indicator, selected_localities, start_date, end_date):
         fig_map, fig_hist, fig_bar, fig_dafor_hist, fig_dafor_sum_bar,
         hist_style, bar_style, dafor_hist_style, dafor_sum_bar_style
     )
+
+@app.callback(
+    [Output("modal", "is_open"), Output("modal-body", "children")],
+    [Input("cs-map-graph", "clickData"), Input("close-modal", "n_clicks")],
+    [State("modal", "is_open")],
+)
+
+def display_modal(clickData, n_close, is_open):
+    ctx = dash.callback_context
+    if not ctx.triggered:
+        return is_open, no_update
+
+    trigger = ctx.triggered[0]["prop_id"].split(".")[0]
+
+    if trigger == "cs-map-graph" and clickData:
+        point = clickData["points"][0]
+        # Extract info and image URLs
+        lat = point["lat"]
+        lon = point["lon"]
+        customdata = point.get("customdata", ["", ""])
+        sub_img = customdata[0]
+        sup_img = customdata[1]
+        print("Subaquática:", sub_img)
+        print("Superfície:", sup_img)
+        body = html.Div([
+            html.P(f"Latitude: {lat}, Longitude: {lon}"),
+            html.A("Ver Foto Subaquática", href=sub_img, target="_blank") if sub_img else html.P("Sem foto"),
+            html.Br(),
+            html.Img(src=sub_img, style={"width": "100%", "margin-bottom": "10px"}) if sub_img else None,
+            html.Br(),
+            html.A("Ver Foto Superfície", href=sup_img, target="_blank") if sup_img else html.P("Sem foto"),
+            html.Br(),
+            html.Img(src=sup_img, style={"width": "100%"}) if sup_img else html.Img(src="https://api-bd.institutohorus.org.br/api/GOPR0644_1748896611088.JPG", style={"width": "100%"}) 
+        ])
+        return True, body
+
+    if trigger == "close-modal" and is_open:
+        return False, no_update
+
+    return is_open, no_update
 
 if __name__ == "__main__":
     app.run(debug=True)

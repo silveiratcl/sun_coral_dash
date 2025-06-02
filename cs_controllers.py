@@ -44,6 +44,8 @@ cs_controls = dbc.Row([
                 options=[
                     {"label": "DPUE", "value": "dpue"},
                     {"label": "IAR-DAFOR", "value": "dafor"},
+                    {"label": "OCORRÊNCIAS", "value": "occurrences"},
+                   
                 ],
                 value="dpue",
                 placeholder="Select Indicator"

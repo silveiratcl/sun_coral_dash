@@ -131,3 +131,31 @@ class CoralDataService:
         df_dafor_sum['DAFOR'] = df_dafor_sum['DAFOR'].fillna(0)
 
         return df_dafor_sum[['locality_id', 'name', 'date', 'DAFOR']]
+    
+
+    def get_occurrences_data(self, start_date=None, end_date=None):
+        query = "SELECT Locality_id, Occurrence_id, Spot_Coords, Date, Depth, Access, Geomorphology, Subaquatica_photo, Superficie_photo FROM data_coralsol_occurrence"
+        df = pd.read_sql(query, db.engine)
+        df.columns = df.columns.str.lower()  # Standardize to lowercase
+
+        df['date'] = pd.to_datetime(df['date'], dayfirst=True)
+
+        if start_date and end_date:
+            df_occ = df[(df['date'] >= start_date) & (df['date'] <= end_date)]
+        else:
+            df_occ = df
+
+        BASE_URL = "https://api-bd.institutohorus.org.br/api"
+        for col in ["subaquatica_photo", "superficie_photo"]:
+            df_occ[col] = df_occ.apply(
+                lambda row: f"{BASE_URL}/Upload/UploadImageCoralSol/{row['occurrence_id']}/{row[col]}" 
+                if pd.notnull(row[col]) and str(row[col]).strip() != "" else None,
+                axis=1
+            )
+
+        print(df_occ[['occurrence_id', 'subaquatica_photo', 'superficie_photo']].head(10))
+
+        return df_occ[['locality_id', 'occurrence_id', 'spot_coords', 'date', 'depth', 'access', 'geomorphology', 'subaquatica_photo', 'superficie_photo']]
+
+
+
