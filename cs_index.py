@@ -21,6 +21,8 @@ import plotly.graph_objects as go
 from dash.dependencies import Output
 
 
+
+
 # Define dashboard_layout 
 dashboard_layout = html.Div([
     html.Div(dcc.Graph(id="cs-map-graph", config={'scrollZoom': True}), id="div-map"),
@@ -31,8 +33,10 @@ dashboard_layout = html.Div([
 ])
 
 
-
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+server = app.server ### included this line to set the server variable
+
+
 
 app.layout = dbc.Container(
     [
