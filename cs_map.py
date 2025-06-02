@@ -130,7 +130,7 @@ def build_dafor_sum_map_figure(df_dafor_sum):
                     lon=lons,
                     mode="lines+markers",
                     name="",
-                    line=dict(width=4, color=color),
+                    line=dict(width=6, color=color),
                     marker=dict(size=6, color=color),
                     hoverinfo="text",
                     text=f"{row['name']}<br>DAFOR: {row['DAFOR']:.2f}" if not pd.isna(row['DAFOR']) else row['name']
