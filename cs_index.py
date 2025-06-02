@@ -25,11 +25,11 @@ from dash.dependencies import Output
 
 # Define dashboard_layout 
 dashboard_layout = html.Div([
-    html.Div(dcc.Graph(id="cs-map-graph", config={'scrollZoom': True}), id="div-map"),
-    html.Div(dcc.Graph(id="cs-histogram-graph"), id="div-hist"),
-    html.Div(dcc.Graph(id="cs-locality-bar-graph"), id="div-bar"),
-    html.Div(dcc.Graph(id="cs-dafor-histogram-graph"), id="div-dafor-hist"),
-    html.Div(dcc.Graph(id="cs-dafor-sum-bar-graph"), id="div-dafor-sum-bar"),
+    html.Div(dcc.Loading(dcc.Graph(id="cs-map-graph", config={'scrollZoom': True}), type="circle"), id="div-map"),
+    html.Div(dcc.Loading(dcc.Graph(id="cs-histogram-graph"), type="circle"), id="div-hist"),
+    html.Div(dcc.Loading(dcc.Graph(id="cs-locality-bar-graph"), type="circle"), id="div-bar"),
+    html.Div(dcc.Loading(dcc.Graph(id="cs-dafor-histogram-graph"), type="circle"), id="div-dafor-hist"),
+    html.Div(dcc.Loading(dcc.Graph(id="cs-dafor-sum-bar-graph"), type="circle"), id="div-dafor-sum-bar"),
 ])
 
 
