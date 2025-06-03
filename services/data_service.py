@@ -148,12 +148,12 @@ class CoralDataService:
         BASE_URL = "https://api-bd.institutohorus.org.br/api"
         for col in ["subaquatica_photo", "superficie_photo"]:
             df_occ[col] = df_occ.apply(
-                lambda row: f"{BASE_URL}/Upload/UploadImageCoralSol/{row['occurrence_id']}/{row[col]}" 
+                lambda row: f"{BASE_URL}/Upload/UploadImageCoralSol/{row['occurrence_id']}/{row[col]}"
                 if pd.notnull(row[col]) and str(row[col]).strip() != "" else None,
                 axis=1
             )
 
-        print(df_occ[['occurrence_id', 'subaquatica_photo', 'superficie_photo']].head(10))
+        print(df_occ[['occurrence_id', 'subaquatica_photo', 'superficie_photo']].head(10)) ## Debugging line to check photo URLs
 
         return df_occ[['locality_id', 'occurrence_id', 'spot_coords', 'date', 'depth', 'access', 'geomorphology', 'subaquatica_photo', 'superficie_photo']]
 

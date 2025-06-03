@@ -26,15 +26,15 @@ from dash import ctx
 import plotly.graph_objects as go
 from dash.dependencies import Output, State
 from dash import callback, no_update
-from flask import send_from_directory, Flask
+from flask import send_from_directory, Flask, Response
+import sqlalchemy
+import os
+import base64
+import requests
 
 # Initialize the Dash app with Bootstrap theme
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 server = app.server
-
-@server.route('/Upload/UploadImageCoralSol/<occurrence_id>/<filename>')
-def serve_image(occurrence_id, filename):
-    return send_from_directory(f'Upload/UploadImageCoralSol/{occurrence_id}', filename)
 
 # Define dashboard_layout 
 dashboard_layout = html.Div([
@@ -183,23 +183,32 @@ def display_modal(clickData, n_close, is_open):
 
     if trigger == "cs-map-graph" and clickData:
         point = clickData["points"][0]
-        # Extract info and image URLs
         lat = point["lat"]
         lon = point["lon"]
         customdata = point.get("customdata", ["", ""])
-        sub_img = customdata[0]
-        sup_img = customdata[1]
-        print("Subaquática:", sub_img)
-        print("Superfície:", sup_img)
+        sub_img_url = customdata[0]
+        sup_img_url = customdata[1]
+
+        # Fetch base64 from API
+        def fetch_base64(url):
+            if not url:
+                return None
+            try:
+                resp = requests.get(url)
+                if resp.status_code == 200:
+                    return resp.text
+            except Exception as e:
+                print(f"Error fetching image: {e}")
+            return None
+
+        sub_img_b64 = fetch_base64(sub_img_url)
+        sup_img_b64 = fetch_base64(sup_img_url)
+
         body = html.Div([
             html.P(f"Latitude: {lat}, Longitude: {lon}"),
-            html.A("Ver Foto Subaquática", href=sub_img, target="_blank") if sub_img else html.P("Sem foto"),
+            html.Img(src=f"data:image/jpeg;base64,{sub_img_b64}", style={"width": "100%", "margin-bottom": "10px"}) if sub_img_b64 else html.P("Sem foto subaquática"),
             html.Br(),
-            html.Img(src=sub_img, style={"width": "100%", "margin-bottom": "10px"}) if sub_img else None,
-            html.Br(),
-            html.A("Ver Foto Superfície", href=sup_img, target="_blank") if sup_img else html.P("Sem foto"),
-            html.Br(),
-            html.Img(src=sup_img, style={"width": "100%"}) if sup_img else html.Img(src="https://api-bd.institutohorus.org.br/api/GOPR0644_1748896611088.JPG", style={"width": "100%"}) 
+            html.Img(src=f"data:image/jpeg;base64,{sup_img_b64}", style={"width": "100%"}) if sup_img_b64 else html.P("Sem foto de superfície"),
         ])
         return True, body
 
