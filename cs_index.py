@@ -33,7 +33,8 @@ import base64
 import requests
 
 # Initialize the Dash app with Bootstrap theme
-app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP],
+           title="Coral-Sol Dashboard" )
 server = app.server
 
 # Define dashboard_layout 
