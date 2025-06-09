@@ -15,7 +15,7 @@ locality_options = [{"label": "Todas", "value": 0}] + sorted(
 cs_controls = dbc.Row([
             dcc.Store(id='store-global'),
             html.Img(id="logo", src=app.get_asset_url("logo.png"), style={'width':'100%'}),
-            html.H2("Painel de Monitormento do Coral-Sol", style={"margin-top": "30px"}),
+            html.H2("Painel de Monitoramento do Coral-Sol", style={"margin-top": "30px"}),
             html.H4(
             """Utilize este dashboard para explorar os dados do monitoramento 
             da invasão do coral-sol na REBIO Arvoredo e Entorno. """
