@@ -134,6 +134,9 @@ class CoralDataService:
     
 
     def get_occurrences_data(self, start_date=None, end_date=None):
+        
+        """ Fetches occurrence data related to the Coral-Sol project.
+        """
         query = "SELECT Locality_id, Occurrence_id, Spot_Coords, Date, Depth, Access, Geomorphology, Subaquatica_photo, Superficie_photo FROM data_coralsol_occurrence"
         df = pd.read_sql(query, db.engine)
         df.columns = df.columns.str.lower()  # Standardize to lowercase
@@ -156,6 +159,20 @@ class CoralDataService:
         print(df_occ[['occurrence_id', 'subaquatica_photo', 'superficie_photo']].head(10)) ## Debugging line to check photo URLs
 
         return df_occ[['locality_id', 'occurrence_id', 'spot_coords', 'date', 'depth', 'access', 'geomorphology', 'subaquatica_photo', 'superficie_photo']]
+    
+    def get_management_data(self, start_date=None, end_date=None):
+        """
+        Fetches management data .
+        Returns:
+            pandas.DataFrame: A DataFrame containing management data.
+        """
+        query = "SELECT management_id, Locality_id, Management_coords, Date, Observer, Depth, Number_of_divers, Method, Managed_mass_kg, Observation, occurrences_managed FROM data_coralsol_management"
+        df = pd.read_sql(query, db.engine)
+        df.columns = df.columns.str.lower()
 
+        df['date'] = pd.to_datetime(df['date'], dayfirst=True)
 
+        if start_date and end_date:
+            df = df[(df['date'] >= start_date) & (df['date'] <= end_date)]
 
+        return df[['management_id', 'locality_id', 'management_coords', 'date', 'observer', 'depth', 'number_of_divers', 'method', 'managed_mass_kg', 'observation', 'occurrences_managed']]
