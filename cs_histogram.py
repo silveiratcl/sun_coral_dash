@@ -177,23 +177,27 @@ def build_dafor_sum_bar_figure(df_dafor_sum):
 
 def build_accumulated_mass_year_figure(df_management):
     """Builds a line chart by locality for accumulated mass managed by year using Plotly Express."""
-
     import plotly.express as px
 
     if df_management.empty:
         return go.Figure()
 
-    df_management['year'] = df_management['date'].dt.year
+    # Ensure 'name' is present and not NaN
+    df_management = df_management.dropna(subset=['name'])
+    df_management['year'] = pd.to_datetime(df_management['date']).dt.year
+
     df_grouped = df_management.groupby(['locality_id', 'name', 'year'], as_index=False)['managed_mass_kg'].sum()
     df_grouped = df_grouped[df_grouped['managed_mass_kg'] > 0]
+
+    print(df_grouped)  # Debug: check if you have multiple localities and years
 
     fig = px.line(
         df_grouped,
         x='year',
         y='managed_mass_kg',
         color='name',
-        title="Massa Gerenciada Acumulada por Ano",
-        labels={"managed_mass_kg": "Massa Gerenciada (kg)", "year": "Ano"},
+        title="Massa Manejada Acumulada por Ano",
+        labels={"managed_mass_kg": "Massa Manejada (kg)", "year": "Ano"},
         template="plotly_dark"
     )
 
