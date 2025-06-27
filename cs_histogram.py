@@ -186,15 +186,19 @@ def build_accumulated_mass_year_figure(df_management):
     df_management = df_management.dropna(subset=['name'])
     df_management['year'] = pd.to_datetime(df_management['date']).dt.year
 
-    df_grouped = df_management.groupby(['locality_id', 'name', 'year'], as_index=False)['managed_mass_kg'].sum()
-    df_grouped = df_grouped[df_grouped['managed_mass_kg'] > 0]
+    df_grouped = (
+        df_management.groupby(['locality_id', 'name', 'year'], as_index=False)['managed_mass_kg'].sum()
+    )
+    df_grouped = df_grouped.sort_values(['locality_id', 'year'])
+    df_grouped['accum_mass_kg'] = df_grouped.groupby('locality_id')['managed_mass_kg'].cumsum()
+    df_grouped = df_grouped[df_grouped['accum_mass_kg'] > 0]
 
     print(df_grouped)  # Debug: check if you have multiple localities and years
 
     fig = px.line(
         df_grouped,
         x='year',
-        y='managed_mass_kg',
+        y='accum_mass_kg',
         color='name',
         title="Massa Manejada Acumulada por Ano",
         labels={"managed_mass_kg": "Massa Manejada (kg)", "year": "Ano"},
@@ -205,6 +209,7 @@ def build_accumulated_mass_year_figure(df_management):
         yaxis_title="Massa Manejada (kg)",
         xaxis_title="Ano",
         margin={"r":10,"t":30,"l":10,"b":40},
-        height=500
+        height=500,
+        legend_title_text=None
     )
     return fig

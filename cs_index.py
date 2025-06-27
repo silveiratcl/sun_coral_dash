@@ -21,7 +21,7 @@ from cs_histogram import (
     build_dafor_sum_bar_figure,
     build_accumulated_mass_year_figure,
 ) 
-
+from cs_tables import build_occurrences_table
 from services.data_service import CoralDataService
 #from cs_methods import methods_layout
 from dash import ctx
@@ -48,6 +48,7 @@ dashboard_layout = html.Div([
     html.Div(dcc.Loading(dcc.Graph(id="cs-dafor-histogram-graph"), type="circle"), id="div-dafor-hist"),
     html.Div(dcc.Loading(dcc.Graph(id="cs-dafor-sum-bar-graph"), type="circle"), id="div-dafor-sum-bar"),
     html.Div(dcc.Loading(dcc.Graph(id="cs-line-graph"), type="circle"), id="div-line"),
+    html.Div(id="occurrences-table-container"),
 ])
 
 # Define the modal for displaying occurrence details
@@ -102,6 +103,7 @@ app.layout = dbc.Container(
         Output("div-dafor-hist", "style"),
         Output("div-dafor-sum-bar", "style"),
         Output("div-line", "style"),
+        Output("occurrences-table-container", "children"),
     ],
     [
         Input("indicator-dropdown", "value"),
@@ -136,8 +138,7 @@ def update_visuals(indicator, selected_localities, start_date, end_date):
     hist_style = bar_style = dafor_hist_style = dafor_sum_bar_style = style_hide
     line_style = style_hide
 
-
-
+    occurrences_table = None  # <--- Add this line
 
     if indicator == "dpue":
         dpue_df = service.get_dpue_by_locality(start_date, end_date)
@@ -169,6 +170,7 @@ def update_visuals(indicator, selected_localities, start_date, end_date):
     elif indicator == "occurrences":
         occurrences_df = service.get_occurrences_data(start_date, end_date)
         fig_map = build_occurrence_map_figure(occurrences_df)
+        occurrences_table = build_occurrences_table(occurrences_df)
         # Hide other charts
         fig_hist = go.Figure()
         fig_bar = go.Figure()
@@ -196,7 +198,8 @@ def update_visuals(indicator, selected_localities, start_date, end_date):
 
     return (
         fig_map, fig_hist, fig_bar, fig_dafor_hist, fig_dafor_sum_bar, fig_line,
-        hist_style, bar_style, dafor_hist_style, dafor_sum_bar_style, line_style
+        hist_style, bar_style, dafor_hist_style, dafor_sum_bar_style, line_style,
+        occurrences_table  # <--- Always return this as the last value
     )
     
 
