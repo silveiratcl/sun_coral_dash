@@ -134,8 +134,8 @@ class CoralDataService:
     
 
     def get_occurrences_data(self, start_date=None, end_date=None):
-        
-        """ Fetches occurrence data related to the Coral-Sol project.
+        """
+        Fetches occurrence data related to the Coral-Sol project, including locality names.
         """
         query = "SELECT Locality_id, Occurrence_id, Spot_Coords, Date, Depth, Access, Geomorphology, Subaquatica_photo, Superficie_photo FROM data_coralsol_occurrence"
         df = pd.read_sql(query, db.engine)
@@ -148,6 +148,10 @@ class CoralDataService:
         else:
             df_occ = df
 
+        # Merge with locality names
+        df_locality = self.get_locality_data()[['locality_id', 'name']]
+        df_occ = df_occ.merge(df_locality, on='locality_id', how='left')
+
         BASE_URL = "https://api-bd.institutohorus.org.br/api"
         for col in ["subaquatica_photo", "superficie_photo"]:
             df_occ[col] = df_occ.apply(
@@ -156,9 +160,10 @@ class CoralDataService:
                 axis=1
             )
 
-        print(df_occ[['occurrence_id', 'subaquatica_photo', 'superficie_photo']].head(10)) ## Debugging line to check photo URLs
+        print(df_occ[['occurrence_id', 'name', 'subaquatica_photo', 'superficie_photo']].head(10))  # Debugging
 
-        return df_occ[['locality_id', 'occurrence_id', 'spot_coords', 'date', 'depth', 'access', 'geomorphology', 'subaquatica_photo', 'superficie_photo']]
+        # Reorder columns to include 'name' after 'locality_id'
+        return df_occ[['locality_id', 'name', 'occurrence_id', 'spot_coords', 'date', 'depth', 'access', 'geomorphology', 'subaquatica_photo', 'superficie_photo']]
     
     def get_management_data(self, start_date=None, end_date=None):
         """

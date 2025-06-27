@@ -17,7 +17,7 @@ def value_to_color(val, vmin, vmax, cmap_name='viridis'):
     return matplotlib.colors.rgb2hex(rgba)
 
 
-def build_map_figure(dpue_df):
+def build_map_figure(dpue_df): # DPUE valuess
     """
     Builds a map figure for DPUE values using Plotly."""
     import plotly.graph_objects as go
@@ -200,17 +200,17 @@ def build_occurrence_map_figure(occurrences_df):
     # Build hover text with info and image links
     def make_hover(row):
         txt = (
-            f"Localidade: {row.get('locality_id', '')}<br>"
+            f"Localidade: {row.get('name', '')}<br>"
             f"Data: {row.get('date', '')}<br>"
             f"Profundidade: {row.get('depth', '')}<br>"
             f"Acesso: {row.get('access', '')}<br>"
             f"Geomorfologia: {row.get('geomorphology', '')}<br>"
         )
-        # Add image links if available
-        if pd.notnull(row.get('subaquatica_photo')):
-            txt += f"<a href='{row['subaquatica_photo']}' target='_blank'>Subaquática</a><br>"
-        if pd.notnull(row.get('superficie_photo')):
-            txt += f"<a href='{row['superficie_photo']}' target='_blank'>Superfície</a>"
+        # # Add image links if available
+        # if pd.notnull(row.get('subaquatica_photo')):
+        #     txt += f"<a href='{row['subaquatica_photo']}' target='_blank'>Subaquática</a><br>"
+        # if pd.notnull(row.get('superficie_photo')):
+        #     txt += f"<a href='{row['superficie_photo']}' target='_blank'>Superfície</a>"
         return txt
 
     occurrences_df['hover'] = occurrences_df.apply(make_hover, axis=1)

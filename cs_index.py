@@ -169,8 +169,23 @@ def update_visuals(indicator, selected_localities, start_date, end_date):
 
     elif indicator == "occurrences":
         occurrences_df = service.get_occurrences_data(start_date, end_date)
-        fig_map = build_occurrence_map_figure(occurrences_df)
-        occurrences_table = build_occurrences_table(occurrences_df)
+        # Keep a copy for the map (needs spot_coords)
+        map_df = occurrences_df.copy()
+
+        # Select and rename columns for display in the table
+        columns_to_show = [
+            "date", "name", "depth", "access", "geomorphology"
+        ]
+        table_df = occurrences_df[columns_to_show].rename(columns={
+            "date": "Data",
+            "name": "Localidade",
+            "depth": "Profundidade",
+            "access": "Acesso",
+            "geomorphology": "Geomorfologia"
+        })
+
+        fig_map = build_occurrence_map_figure(map_df)
+        occurrences_table = build_occurrences_table(table_df)
         # Hide other charts
         fig_hist = go.Figure()
         fig_bar = go.Figure()
