@@ -22,6 +22,7 @@ def value_to_color(val, vmin, vmax, cmap_name='viridis'):
 def build_map_figure(dpue_df): # DPUE valuess
     """
     Builds a map figure for DPUE values using Plotly."""
+    
     import plotly.graph_objects as go
     import numpy as np
     import pandas as pd
@@ -445,7 +446,7 @@ def build_management_map_figure(df_management):
     )
     return fig
 
-############## heatmap for management transects
+############## heatmap for management transects. just for reference, not used in the app
 
 # def interpolate_line_by_distance(coords, max_spacing_m=20):
 #     """Interpolate points along a line with a maximum spacing in meters."""

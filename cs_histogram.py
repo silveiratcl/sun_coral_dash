@@ -26,13 +26,20 @@ def build_histogram_figure(dpue_df):
     fig = px.histogram(
         dpue_df,
         x="DPUE",
+        title="Densidade de DPUE",
         nbins=nbins,
         template="plotly_dark",   
     )
 
     fig.update_layout(
          bargap=0.1,
-         margin={"r":10,"t":20,"l":10,"b":40},
+         margin={"r":10,"t":35,"l":10,"b":40},
+         title={
+        "text": "Densidade de DPUE",
+        "x": 0,  # Left justify
+        "xanchor": "left"
+    },
+         
          height=180, 
          yaxis_title="Contagem",
     )
@@ -70,6 +77,7 @@ def build_locality_bar_figure(dpue_df):
     fig = px.bar(
         df_sorted,
         x="DPUE",
+        title="Total DPUE por Localidade",
         y=y_col,
         orientation="h",
         template="plotly_dark",
@@ -81,7 +89,12 @@ def build_locality_bar_figure(dpue_df):
     fig.update_layout(
         yaxis=dict(autorange="reversed", showticklabels=False),
         yaxis_title=None,
-        margin={"r":10,"t":20,"l":10,"b":40},
+        title={
+        "text": "Total DPUE por Localidade",
+        "x": 0,  # Left justify
+        "xanchor": "left"
+    },
+        margin={"r":10,"t":35,"l":10,"b":40},
         height=500
     )
     return fig
@@ -97,7 +110,7 @@ def build_dafor_histogram_figure(dafor_values):
 
     # Define the mapping
     dafor_map = {
-        10: "D",
+        10:"D",
         8: "A",
         6: "F",
         4: "O",
@@ -119,7 +132,16 @@ def build_dafor_histogram_figure(dafor_values):
 
     fig.update_layout(
         bargap=0.1,
-        margin={"r":10,"t":20,"l":10,"b":40},
+        #title="Densidade das categorias de DAFOR",
+        title={
+        "text": "Densidade das categorias de DAFOR",
+        "x": 0,  # Left justify
+        "xanchor": "left"
+    },
+
+
+
+        margin={"r":10,"t":35,"l":10,"b":40},
         height=180,
         yaxis_title="Contagem",
         xaxis_title="IAR-DAFOR",
@@ -170,7 +192,12 @@ def build_dafor_sum_bar_figure(df_dafor_sum):
     fig.update_layout(
         yaxis=dict(autorange="reversed", showticklabels=False),
         yaxis_title=None,
-        margin={"r":10,"t":20,"l":10,"b":40},
+       title={
+        "text": "Soma das pontuações DAFOR por localidade",
+        "x": 0,  # Left justify
+        "xanchor": "left"
+    },
+        margin={"r":10,"t":35,"l":10,"b":40},
         height=500
     )
     return fig
@@ -200,7 +227,7 @@ def build_accumulated_mass_year_figure(df_management):
         x='year',
         y='accum_mass_kg',
         color='name',
-        title="Massa Manejada Acumulada por Ano",
+        title="Massa Manejada Acumulada Anual",
         labels={"managed_mass_kg": "Massa Manejada (kg)", "year": "Ano"},
         template="plotly_dark"
     )
@@ -208,6 +235,11 @@ def build_accumulated_mass_year_figure(df_management):
     fig.update_layout(
         yaxis_title="Massa Manejada (kg)",
         xaxis_title="Ano",
+        title={
+            "text": "Massa Manejada Acumulada Anual por Localidade",
+            "x": 0,  # Left justify
+            "xanchor": "left"
+        },
         margin={"r":10,"t":30,"l":10,"b":40},
         height=500,
         legend_title_text=None
