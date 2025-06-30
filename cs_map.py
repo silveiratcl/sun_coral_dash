@@ -8,7 +8,9 @@ import pandas as pd
 import numpy as np
 import matplotlib
 import matplotlib.cm
+from geopy.distance import geodesic
 
+mapbox_token ="pk.eyJ1Ijoic2lsdmVpcmF0Y2wiLCJhIjoiY21iNWs2NGNqMWU1djJrcGxtbWdoZGNqZiJ9.OSx-QCgArevVT7HgToBfBA"
 
 def value_to_color(val, vmin, vmax, cmap_name='viridis'):
     norm = (val - vmin) / (vmax - vmin) if vmax > vmin else 0
@@ -93,7 +95,9 @@ def build_map_figure(dpue_df): # DPUE valuess
 
     fig.update_layout(
         template="plotly_dark",
-        mapbox_style="open-street-map",
+        mapbox_style="satellite-streets",
+        mapbox_accesstoken=mapbox_token,
+        #mapbox_style="open-street-map",
         mapbox_zoom=10,
         mapbox_center={"lat": mean_lat, "lon": mean_lon},
         margin={"r":10,"t":30,"l":10,"b":10},
@@ -173,7 +177,9 @@ def build_dafor_sum_map_figure(df_dafor_sum):
 
     fig.update_layout(
         template="plotly_dark",
-        mapbox_style="open-street-map",
+         mapbox_style="satellite-streets",
+        mapbox_accesstoken=mapbox_token,
+        #mapbox_style="open-street-map",
         mapbox_zoom=10,
         mapbox_center={"lat": mean_lat, "lon": mean_lon},
         margin={"r":10,"t":30,"l":10,"b":10},
@@ -235,7 +241,9 @@ def build_occurrence_map_figure(occurrences_df):
 
     fig.update_layout(
         template="plotly_dark",
-        mapbox_style="open-street-map",
+        mapbox_style="satellite-streets",
+        mapbox_accesstoken=mapbox_token,
+        #mapbox_style="open-street-map",
         mapbox_zoom=10,
         mapbox_center={"lat": mean_lat, "lon": mean_lon},
         margin={"r":10,"t":30,"l":10,"b":10},
@@ -329,7 +337,9 @@ def build_dafor_sum_map_figure(df_dafor_sum):
 
     fig.update_layout(
         template="plotly_dark",
-        mapbox_style="open-street-map",
+        mapbox_style="satellite-streets",
+        mapbox_accesstoken=mapbox_token,
+        #mapbox_style="open-street-map",
         mapbox_zoom=10,
         mapbox_center={"lat": mean_lat, "lon": mean_lon},
         margin={"r":10,"t":30,"l":10,"b":10},
@@ -425,11 +435,77 @@ def build_management_map_figure(df_management):
 
     fig.update_layout(
         template="plotly_dark",
-        mapbox_style="open-street-map",
+        mapbox_style="satellite-streets",
+        mapbox_accesstoken=mapbox_token,
+        #mapbox_style="open-street-map",
         mapbox_zoom=10,
         mapbox_center={"lat": mean_lat, "lon": mean_lon},
         margin={"r":10,"t":30,"l":10,"b":10},
         height=600
     )
     return fig
+
+############## heatmap for management transects
+
+# def interpolate_line_by_distance(coords, max_spacing_m=20):
+#     """Interpolate points along a line with a maximum spacing in meters."""
+#     result = []
+#     for i in range(len(coords) - 1):
+#         start = coords[i]
+#         end = coords[i + 1]
+#         dist = geodesic(start, end).meters
+#         n_points = max(2, int(dist // max_spacing_m) + 1)
+#         lats = np.linspace(start[0], end[0], n_points)
+#         lons = np.linspace(start[1], end[1], n_points)
+#         result.extend(zip(lats, lons))
+#     return result
+
+# def build_management_heatmap_figure(df_management, max_spacing_m=20):
+#     """
+#     Builds a heatmap figure for management transects using Plotly.
+#     Interpolates points along each transect for density visualization.
+#     """
+#     # Interpolate points along all transects
+#     all_points = []
+#     for coords in df_management['management_coords']:
+#         if coords and isinstance(coords, list) and len(coords) > 1:
+#             all_points.extend(interpolate_line_by_distance(coords, max_spacing_m=max_spacing_m))
+
+#     if not all_points:
+#         # Fallback: empty map
+#         fig = go.Figure()
+#         fig.update_layout(
+#             template="plotly_dark",
+#             mapbox_style="satellite-streets",
+#             mapbox_accesstoken=mapbox_token,
+#             mapbox_zoom=10,
+#             mapbox_center={"lat": -27, "lon": -48},
+#             margin={"r":10,"t":30,"l":10,"b":10},
+#             height=600
+#         )
+#         return fig
+
+#     df_points = pd.DataFrame(all_points, columns=['lat', 'lon'])
+
+#     # Center map on mean of points
+#     mean_lat = df_points['lat'].mean()
+#     mean_lon = df_points['lon'].mean()
+
+#     import plotly.express as px
+#     fig = px.density_mapbox(
+#         df_points, lat='lat', lon='lon',
+#         radius=10,
+#         center=dict(lat=mean_lat, lon=mean_lon),
+#         zoom=10,
+#         mapbox_style="satellite-streets",
+#         mapbox_accesstoken=mapbox_token
+#     )
+#     fig.update_layout(
+#         template="plotly_dark",
+#         margin={"r":10,"t":30,"l":10,"b":10},
+#         height=600
+#     )
+#     return fig
+
+#############################
 
