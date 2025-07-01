@@ -154,11 +154,27 @@ def update_visuals(indicator, selected_localities, start_date, end_date):
         dafor_sum_bar_style = style_hide
 
     elif indicator == "dafor":
+        # Get DAFOR sum per locality (for bar and map)
         df_dafor_sum = service.get_sum_of_dafor_by_locality(start_date, end_date)
         if selected_localities:
             df_dafor_sum = df_dafor_sum[df_dafor_sum['locality_id'].isin(selected_localities)]
         fig_map = build_dafor_sum_map_figure(df_dafor_sum)
-        dafor_values = service.get_dafor_value_histogram_data(start_date, end_date)
+
+        # Get all DAFOR values (for histogram)
+        dafor_df = service.get_dafor_data(start_date, end_date)
+        if selected_localities:
+            dafor_df = dafor_df[dafor_df['locality_id'].isin(selected_localities)]
+        # If dafor_value is a string of comma-separated values, flatten it:
+        if dafor_df['dafor_value'].apply(lambda x: isinstance(x, str) and ',' in x).any():
+            dafor_df['dafor_value'] = dafor_df['dafor_value'].apply(
+                lambda x: [pd.to_numeric(i, errors='coerce') for i in str(x).split(',')]
+            )
+            dafor_values = pd.Series([v for sublist in dafor_df['dafor_value'] for v in sublist])
+        else:
+            dafor_values = pd.to_numeric(dafor_df['dafor_value'], errors='coerce')
+        dafor_values = dafor_values.dropna()
+        dafor_values = dafor_values[(dafor_values >= 0) & (dafor_values <= 10)]
+
         fig_dafor_hist = build_dafor_histogram_figure(dafor_values)
         fig_dafor_sum_bar = build_dafor_sum_bar_figure(df_dafor_sum)
         # DPUE charts remain empty

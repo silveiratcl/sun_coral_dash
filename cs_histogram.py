@@ -102,46 +102,46 @@ def build_locality_bar_figure(dpue_df):
 def build_dafor_histogram_figure(dafor_values):
     """
     Builds a histogram figure for DAFOR values using Plotly Express,
-    mapping numeric values to DAFOR scale labels.
+    always showing all 6 DAFOR categories, even if some are absent.
     """
-    # Handle empty or all-NaN DAFOR values
-    if dafor_values.empty or dafor_values.dropna().empty:
-        return go.Figure()  # Return an empty figure
+    import pandas as pd
+    import plotly.express as px
 
-    # Define the mapping
+    # Define the mapping and order
     dafor_map = {
-        10:"D",
+        10: "D",
         8: "A",
         6: "F",
         4: "O",
         2: "R",
         0: "Ausente"
     }
+    category_order = ["D", "A", "F", "O", "R", "Ausente"]
 
-    # Map numeric values to labels, keep only defined values
-    dafor_labels = dafor_values.map(dafor_map).dropna()
+    # Map numeric values to labels
+    dafor_labels = dafor_values.map(dafor_map)
+    dafor_labels = pd.Categorical(dafor_labels, categories=category_order, ordered=True)
 
-    # Define the order for the categories
-    category_order = [ "D", "A", "F", "O", "R", "Ausente"]
+    # Count occurrences, including zeros
+    counts = pd.value_counts(dafor_labels, sort=False).reindex(category_order, fill_value=0)
+    df_plot = pd.DataFrame({'DAFOR': category_order, 'Count': counts.values})
 
-    fig = px.histogram(
-        x=dafor_labels,
-        category_orders={"x": category_order},
+    fig = px.bar(
+        df_plot,
+        x="DAFOR",
+        y="Count",
+        category_orders={"DAFOR": category_order},
         template="plotly_dark",
     )
 
     fig.update_layout(
         bargap=0.1,
-        #title="Densidade das categorias de DAFOR",
         title={
-        "text": "Densidade das categorias de DAFOR",
-        "x": 0,  # Left justify
-        "xanchor": "left"
-    },
-
-
-
-        margin={"r":10,"t":35,"l":10,"b":40},
+            "text": "Densidade das categorias de DAFOR",
+            "x": 0,
+            "xanchor": "left"
+        },
+        margin={"r": 10, "t": 35, "l": 10, "b": 40},
         height=180,
         yaxis_title="Contagem",
         xaxis_title="IAR-DAFOR",
