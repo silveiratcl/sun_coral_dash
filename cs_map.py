@@ -446,6 +446,176 @@ def build_management_map_figure(df_management):
     )
     return fig
 
+import plotly.graph_objects as go
+
+def build_days_since_management_map_figure(df_days_since):
+    """
+    Builds a map with localities colored by days since last management.
+    Only lines are shown, colored by days_since (Viridis palette).
+    """
+    service = CoralDataService()
+    localities = service.get_locality_data()
+
+    # Only keep localities present in the filtered df_days_since
+    localities = localities[localities['locality_id'].isin(df_days_since['locality_id'])]
+    localities = localities.merge(df_days_since[['locality_id', 'days_since']], on='locality_id', how='left')
+    localities['days_since'] = localities['days_since'].fillna(0)
+
+    days_min = localities['days_since'].min()
+    days_max = localities['days_since'].max()
+    colorscale = 'Viridis'
+
+    fig = go.Figure()
+    # ...existing code...
+    for _, row in localities.iterrows():
+        try:
+            points = json.loads(row['coords_local'])
+            if points and isinstance(points, list) and isinstance(points[0], list):
+                lats, lons = zip(*points)
+                color = value_to_color(row['days_since'], days_min, days_max, 'viridis')
+                fig.add_trace(go.Scattermapbox(
+                    showlegend=False,
+                    lat=lats,
+                    lon=lons,
+                    mode="lines",
+                    name="",
+                    line=dict(width=6, color=color),
+                    hoverinfo="text",
+                    text=f"{row['name']}<br>Dias desde monitoramento: {row['days_since']:.0f}" if not pd.isna(row['days_since']) else row['name']
+                ))
+        except Exception as e:
+            print(f"Error plotting {row['name']}: {e}")
+            pass
+# ...existing code...
+
+    # Add a dummy trace for the colorbar
+    days_vals = localities['days_since'].dropna()
+    if not days_vals.empty:
+        fig.add_trace(go.Scattermapbox(
+            lat=[None], lon=[None],
+            mode="markers",
+            marker=dict(
+                size=0.1,
+                color=np.linspace(days_min, days_max, 10),
+                colorscale=colorscale,
+                cmin=days_min,
+                cmax=days_max,
+                colorbar=dict(
+                    title="Último Manejo (dias)",
+                    thickness=25,
+                    y=0.5,
+                    x=1.02,
+                    xanchor="left",
+                    yanchor="middle",
+                    len=0.95
+                ),
+            ),
+            showlegend=False,
+            hoverinfo='none'
+        ))
+
+    if not localities.empty:
+        mean_lat = localities['LATITUDE'].mean()
+        mean_lon = localities['LONGITUDE'].mean()
+    else:
+        mean_lat, mean_lon = -27, -48
+
+    fig.update_layout(
+        template="plotly_dark",
+        mapbox_style="satellite-streets",
+        mapbox_accesstoken=mapbox_token,
+        mapbox_zoom=10,
+        mapbox_center={"lat": mean_lat, "lon": mean_lon},
+        margin={"r":10,"t":30,"l":10,"b":10},
+        height=600
+    )
+    return fig
+
+def build_days_since_monitoring_map_figure(df_days_since):
+    """
+    Builds a map with localities colored by days since last monitoring.
+    Only lines are shown, colored by days_since (Viridis palette).
+    """
+    import json
+    import numpy as np
+    import plotly.graph_objects as go
+    import pandas as pd
+
+    service = CoralDataService()
+    localities = service.get_locality_data()
+    localities = localities[localities['locality_id'].isin(df_days_since['locality_id'])]
+    localities = localities.merge(df_days_since[['locality_id', 'days_since']], on='locality_id', how='left')
+    localities['days_since'] = localities['days_since'].fillna(0)
+    # Rename columns to lowercase after merge
+    localities = localities.rename(columns={'LATITUDE': 'latitude', 'LONGITUDE': 'longitude'})
+
+    days_min = localities['days_since'].min()
+    days_max = localities['days_since'].max()
+    colorscale = 'Viridis'
+
+    fig = go.Figure()
+    for _, row in localities.iterrows():
+        try:
+            points = json.loads(row['coords_local'])
+            if points and isinstance(points, list) and isinstance(points[0], list):
+                lats, lons = zip(*points)
+                color = value_to_color(row['days_since'], days_min, days_max, 'viridis')
+                fig.add_trace(go.Scattermapbox(
+                    showlegend=False,
+                    lat=lats,
+                    lon=lons,
+                    mode="lines",
+                    name="",
+                    line=dict(width=6, color=color),
+                    hoverinfo="text",
+                    text=f"{row['name']}<br>Dias desde monitoramento: {row['days_since']:.0f}" if not pd.isna(row['days_since']) else row['name']
+                ))
+        except Exception as e:
+            print(f"Error plotting {row['name']}: {e}")
+            pass
+    # Add a dummy trace for the colorbar
+    days_vals = localities['days_since'].dropna()
+    if not days_vals.empty:
+        fig.add_trace(go.Scattermapbox(
+            lat=[None], lon=[None],
+            mode="markers",
+            marker=dict(
+                size=0.1,
+                color=np.linspace(days_min, days_max, 10),
+                colorscale=colorscale,
+                cmin=days_min,
+                cmax=days_max,
+                colorbar=dict(
+                    title="Último Monitoramento (dias)",
+                    thickness=25,
+                    y=0.5,
+                    x=1.02,
+                    xanchor="left",
+                    yanchor="middle",
+                    len=0.95
+                ),
+            ),
+            showlegend=False,
+            hoverinfo='none'
+        ))
+
+    if not localities.empty:
+        mean_lat = localities['latitude'].mean()
+        mean_lon = localities['longitude'].mean()
+    else:
+        mean_lat, mean_lon = -27, -48
+
+    fig.update_layout(
+        template="plotly_dark",
+        mapbox_style="satellite-streets",
+        mapbox_accesstoken=mapbox_token,
+        mapbox_zoom=10,
+        mapbox_center={"lat": mean_lat, "lon": mean_lon},
+        margin={"r":10,"t":30,"l":10,"b":10},
+        height=600
+    )
+    return fig
+
 ############## heatmap for management transects. just for reference, not used in the app
 
 # def interpolate_line_by_distance(coords, max_spacing_m=20):

@@ -46,6 +46,8 @@ cs_controls = dbc.Row([
                     {"label": "IAR-DAFOR", "value": "dafor"},
                     {"label": "OCORRÊNCIAS", "value": "occurrences"},
                     {"label": "MASSA MANEJADA (KG)", "value": "management"},
+                    {"label": "ÚLTIMO MANEJO (DIAS)", "value": "days_since_management"},
+                    {"label": "ÚLTIMO MONITORAMENTO (DIAS)", "value": "days_since_monitoring"},
                    
                 ],
                 value="dpue",

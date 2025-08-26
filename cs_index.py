@@ -7,6 +7,8 @@ from cs_map import (
     build_map_figure,
     build_occurrence_map_figure,
     build_management_map_figure,
+    build_days_since_management_map_figure,
+    build_days_since_monitoring_map_figure,  # <-- Add this line
 )    
 
 from cs_controllers import cs_controls
@@ -20,6 +22,8 @@ from cs_histogram import (
     build_dafor_histogram_figure,
     build_dafor_sum_bar_figure,
     build_accumulated_mass_year_figure,
+    build_days_since_management_bar_figure,  # <-- Add this line
+    build_days_since_monitoring_bar_figure
 ) 
 from cs_tables import build_occurrences_table
 from services.data_service import CoralDataService
@@ -96,7 +100,7 @@ app.layout = dbc.Container(
         Output("cs-histogram-graph", "figure"),
         Output("cs-locality-bar-graph", "figure"),
         Output("cs-dafor-histogram-graph", "figure"),
-        Output("cs-dafor-sum-bar-graph", "figure"),
+        Output("cs-dafor-sum-bar-graph", "figure"),  # <-- FIXED HERE
         Output("cs-line-graph", "figure"),
         Output("div-hist", "style"),
         Output("div-bar", "style"),
@@ -224,6 +228,36 @@ def update_visuals(indicator, selected_localities, start_date, end_date):
         line_style = style_show
         # Hide other charts
         hist_style = bar_style = dafor_hist_style = dafor_sum_bar_style = style_hide
+    elif indicator == "days_since_management":
+        df_days_since = service.get_days_since_last_management(start_date, end_date)
+        if selected_localities:
+            df_days_since = df_days_since[df_days_since['locality_id'].isin(selected_localities)]
+        fig_map = build_days_since_management_map_figure(df_days_since)
+        fig_bar = build_days_since_management_bar_figure(df_days_since)
+        # Hide other charts, show map and bar
+        fig_hist = go.Figure()
+        fig_dafor_hist = go.Figure()
+        fig_dafor_sum_bar = go.Figure()
+        fig_line = go.Figure()
+        hist_style = style_hide
+        bar_style = style_show
+        dafor_hist_style = style_hide
+        dafor_sum_bar_style = style_hide
+   
+    elif indicator == "days_since_monitoring":
+        df_days_since = service.get_days_since_last_monitoring(start_date, end_date)
+        if selected_localities:
+            df_days_since = df_days_since[df_days_since['locality_id'].isin(selected_localities)]
+        fig_map = build_days_since_monitoring_map_figure(df_days_since)
+        fig_bar = build_days_since_monitoring_bar_figure(df_days_since)  # <-- bar plot below map
+        fig_hist = go.Figure()
+        fig_dafor_hist = go.Figure()
+        fig_dafor_sum_bar = go.Figure()
+        fig_line = go.Figure()
+        hist_style = style_hide
+        bar_style = style_show
+        dafor_hist_style = style_hide
+        dafor_sum_bar_style = style_hide
     else:
         hist_style = bar_style = dafor_hist_style = dafor_sum_bar_style = style_hide
 

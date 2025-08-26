@@ -181,3 +181,37 @@ class CoralDataService:
             df = df[(df['date'] >= start_date) & (df['date'] <= end_date)]
 
         return df[['management_id', 'locality_id', 'management_coords', 'date', 'observer', 'depth', 'number_of_divers', 'method', 'managed_mass_kg', 'observation', 'occurrences_managed']]
+
+    def get_days_since_last_management(self, start_date=None, end_date=None):
+        query = "SELECT Locality_id, Date FROM data_coralsol_management"
+        df = pd.read_sql(query, db.engine)
+        df.columns = df.columns.str.lower()
+        df['date'] = pd.to_datetime(df['date'])
+        if start_date and end_date:
+            df = df[(df['date'] >= start_date) & (df['date'] <= end_date)]
+        last_dates = df.groupby('locality_id')['date'].max().reset_index()
+        # Merge with locality info (name, latitude, longitude)
+        localities = self.get_locality_data()
+        print(localities.columns)  # Debug: see available columns
+        localities = localities[['locality_id', 'name', 'LATITUDE', 'LONGITUDE']]
+        localities = localities.rename(columns={'LATITUDE': 'latitude', 'LONGITUDE': 'longitude'})
+        last_dates = last_dates.merge(localities, on='locality_id', how='left')
+        today = pd.Timestamp.now().normalize()
+        last_dates['days_since'] = (today - last_dates['date']).dt.days
+        return last_dates
+
+    def get_days_since_last_monitoring(self, start_date=None, end_date=None):
+        # Use get_dafor_data to get monitoring records
+        df = self.get_dafor_data(start_date, end_date)
+        # Ensure date is datetime
+        df['date'] = pd.to_datetime(df['date'])
+        # Get last monitoring date per locality
+        last_dates = df.groupby('locality_id')['date'].max().reset_index()
+        # Merge with locality info (name, latitude, longitude, coords_local)
+        localities = self.get_locality_data()
+        localities = localities[['locality_id', 'name', 'LATITUDE', 'LONGITUDE', 'coords_local']]
+        localities = localities.rename(columns={'LATITUDE': 'latitude', 'LONGITUDE': 'longitude'})
+        last_dates = last_dates.merge(localities, on='locality_id', how='left')
+        today = pd.Timestamp.now().normalize()
+        last_dates['days_since'] = (today - last_dates['date']).dt.days
+        return last_dates

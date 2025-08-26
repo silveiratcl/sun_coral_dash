@@ -245,3 +245,58 @@ def build_accumulated_mass_year_figure(df_management):
         legend_title_text=None
     )
     return fig
+
+import plotly.express as px
+
+def build_days_since_management_bar_figure(df_days_since):
+    """
+    Builds a horizontal bar chart for days since last management per locality,
+    ordered from biggest to smallest.
+    """
+    import plotly.express as px
+
+    # Sort by days_since descending
+    df_sorted = df_days_since.sort_values("days_since", ascending=True)
+
+    # Set categorical order for y-axis
+    df_sorted['name'] = pd.Categorical(df_sorted['name'], categories=df_sorted['name'], ordered=True)
+
+    fig = px.bar(
+        df_sorted,
+        x='days_since',      # Value on x-axis
+        y='name',            # Locality on y-axis
+        orientation='h',     # Horizontal bars
+        labels={'name': 'Localidade', 'days_since': 'Dias desde última gestão'},
+        title='Dias desde última manejo por localidade',
+        template='plotly_dark'
+    )
+    fig.update_layout(
+        bargap=0.2,
+        margin={"r":10,"t":35,"l":10,"b":40},
+        height=400,
+        xaxis_title="Último Manejo (dias)",
+        yaxis_title="Localidade"
+    )
+    return fig
+
+def build_days_since_monitoring_bar_figure(df_days_since):
+    import plotly.express as px
+    df_sorted = df_days_since.sort_values("days_since", ascending=True)
+    df_sorted['name'] = pd.Categorical(df_sorted['name'], categories=df_sorted['name'], ordered=True)
+    fig = px.bar(
+        df_sorted,
+        x='days_since',
+        y='name',
+        orientation='h',
+        labels={'name': 'Localidade', 'days_since': 'Dias desde último monitoramento'},
+        title='Dias desde último monitoramento por localidade',
+        template='plotly_dark'
+    )
+    fig.update_layout(
+        bargap=0.2,
+        margin={"r":10,"t":35,"l":10,"b":40},
+        height=800,
+        xaxis_title="Dias desde último monitoramento",
+        yaxis_title="Localidade"
+    )
+    return fig
