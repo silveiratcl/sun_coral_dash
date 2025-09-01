@@ -481,7 +481,7 @@ def build_days_since_management_map_figure(df_days_since):
                     name="",
                     line=dict(width=6, color=color),
                     hoverinfo="text",
-                    text=f"{row['name']}<br>Dias desde monitoramento: {row['days_since']:.0f}" if not pd.isna(row['days_since']) else row['name']
+                    text=f"{row['name']}<br>Último manejo há {row['days_since']:.0f}" if not pd.isna(row['days_since']) else row['name']
                 ))
         except Exception as e:
             print(f"Error plotting {row['name']}: {e}")
@@ -568,7 +568,7 @@ def build_days_since_monitoring_map_figure(df_days_since):
                     name="",
                     line=dict(width=6, color=color),
                     hoverinfo="text",
-                    text=f"{row['name']}<br>Dias desde monitoramento: {row['days_since']:.0f}" if not pd.isna(row['days_since']) else row['name']
+                    text=f"{row['name']}<br>Último monitoramento há {row['days_since']:.0f}" if not pd.isna(row['days_since']) else row['name']
                 ))
         except Exception as e:
             print(f"Error plotting {row['name']}: {e}")

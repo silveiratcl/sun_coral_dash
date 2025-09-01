@@ -1,8 +1,6 @@
 from dash import dcc, html
 import dash_bootstrap_components as dbc
 from app import app
-
-
 from services.data_service import CoralDataService
 
 service = CoralDataService()

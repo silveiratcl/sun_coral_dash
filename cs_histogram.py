@@ -267,7 +267,7 @@ def build_days_since_management_bar_figure(df_days_since):
         y='name',            # Locality on y-axis
         orientation='h',     # Horizontal bars
         labels={'name': 'Localidade', 'days_since': 'Dias desde última gestão'},
-        title='Dias desde última manejo por localidade',
+        title='Dias desde último manejo por localidade',
         template='plotly_dark'
     )
     fig.update_layout(
