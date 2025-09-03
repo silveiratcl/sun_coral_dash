@@ -300,3 +300,54 @@ def build_days_since_monitoring_bar_figure(df_days_since):
         yaxis_title="Localidade"
     )
     return fig
+
+def build_removal_ratio_year_figure(df_management):
+    """
+    Builds a line chart showing the removal ratio (mass removed per day)
+    grouped by year and locality.
+    """
+    import plotly.express as px
+    import plotly.graph_objects as go
+
+    if df_management.empty:
+        return go.Figure()
+
+    # Ensure 'name' is present and not NaN
+    df_management = df_management.dropna(subset=['name'])
+    df_management['year'] = pd.to_datetime(df_management['date']).dt.year
+
+    # Group by locality and year, calculate total mass and number of days
+    df_grouped = (
+        df_management.groupby(['locality_id', 'name', 'year'], as_index=False)
+        .agg(
+            total_mass=('managed_mass_kg', 'sum'),
+            n_days=('date', lambda x: x.nunique())
+        )
+    )
+    # Calculate removal ratio (mass removed per day)
+    df_grouped['removal_ratio_kg_day'] = df_grouped['total_mass'] / df_grouped['n_days']
+    df_grouped = df_grouped[df_grouped['removal_ratio_kg_day'] > 0]
+
+    fig = px.line(
+        df_grouped,
+        x='year',
+        y='removal_ratio_kg_day',
+        color='name',
+        title="Razão de Remoção de Massa por Dia (kg/dia) por Ano",
+        labels={"removal_ratio_kg_day": "Massa Removida/Dia (kg/dia)", "year": "Ano"},
+        template="plotly_dark"
+    )
+
+    fig.update_layout(
+        yaxis_title="Massa Removida/Dia (kg/dia)",
+        xaxis_title="Ano",
+        title={
+            "text": "Razão de Remoção de Massa por Dia por Localidade e Ano",
+            "x": 0,
+            "xanchor": "left"
+        },
+        margin={"r":10,"t":30,"l":10,"b":40},
+        height=500,
+        legend_title_text=None
+    )
+    return fig

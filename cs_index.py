@@ -23,7 +23,8 @@ from cs_histogram import (
     build_dafor_sum_bar_figure,
     build_accumulated_mass_year_figure,
     build_days_since_management_bar_figure,  # <-- Add this line
-    build_days_since_monitoring_bar_figure
+    build_days_since_monitoring_bar_figure,
+    build_removal_ratio_year_figure
 ) 
 from cs_tables import build_occurrences_table
 from services.data_service import CoralDataService
@@ -52,6 +53,7 @@ dashboard_layout = html.Div([
     html.Div(dcc.Loading(dcc.Graph(id="cs-dafor-histogram-graph"), type="circle"), id="div-dafor-hist"),
     html.Div(dcc.Loading(dcc.Graph(id="cs-dafor-sum-bar-graph"), type="circle"), id="div-dafor-sum-bar"),
     html.Div(dcc.Loading(dcc.Graph(id="cs-line-graph"), type="circle"), id="div-line"),
+    html.Div(dcc.Loading(dcc.Graph(id="cs-removal-ratio-graph"), type="circle"), id="div-removal-ratio"),
     html.Div(id="occurrences-table-container"),
 ])
 
@@ -100,13 +102,15 @@ app.layout = dbc.Container(
         Output("cs-histogram-graph", "figure"),
         Output("cs-locality-bar-graph", "figure"),
         Output("cs-dafor-histogram-graph", "figure"),
-        Output("cs-dafor-sum-bar-graph", "figure"),  # <-- FIXED HERE
+        Output("cs-dafor-sum-bar-graph", "figure"),
         Output("cs-line-graph", "figure"),
+        Output("cs-removal-ratio-graph", "figure"),
         Output("div-hist", "style"),
         Output("div-bar", "style"),
         Output("div-dafor-hist", "style"),
         Output("div-dafor-sum-bar", "style"),
         Output("div-line", "style"),
+        Output("div-removal-ratio", "style"),  # <-- ADD THIS LINE
         Output("occurrences-table-container", "children"),
     ],
     [
@@ -119,8 +123,6 @@ app.layout = dbc.Container(
 
 def update_visuals(indicator, selected_localities, start_date, end_date):
     service = CoralDataService()
-
-    
 
     # Normalize selected_localities to handle group selection
     if not selected_localities or 0 in (selected_localities if isinstance(selected_localities, list) else [selected_localities]):
@@ -146,7 +148,8 @@ def update_visuals(indicator, selected_localities, start_date, end_date):
     fig_dafor_hist = go.Figure()
     fig_dafor_sum_bar = go.Figure()
     fig_line = go.Figure()
-    
+    fig_removal_ratio = go.Figure()  
+
     # Default: show all
     style_hide = {'display': 'none'}
     style_show = {'display': 'block'}
@@ -154,7 +157,7 @@ def update_visuals(indicator, selected_localities, start_date, end_date):
     # Default styles for charts
     hist_style = bar_style = dafor_hist_style = dafor_sum_bar_style = style_hide
     line_style = style_hide
-
+   
     occurrences_table = None  # <--- Add this line
 
     if indicator == "dpue":
@@ -169,6 +172,8 @@ def update_visuals(indicator, selected_localities, start_date, end_date):
         bar_style = style_show
         dafor_hist_style = style_hide
         dafor_sum_bar_style = style_hide
+        removal_ratio_style = style_hide
+        
 
     elif indicator == "dafor":
         # Get DAFOR sum per locality (for bar and map)
@@ -199,6 +204,7 @@ def update_visuals(indicator, selected_localities, start_date, end_date):
         bar_style = style_hide
         dafor_hist_style = style_show
         dafor_sum_bar_style = style_show
+        removal_ratio_style = style_hide
 
     elif indicator == "occurrences":
         occurrences_df = service.get_occurrences_data(start_date, end_date)
@@ -225,22 +231,23 @@ def update_visuals(indicator, selected_localities, start_date, end_date):
         fig_dafor_hist = go.Figure()
         fig_dafor_sum_bar = go.Figure()
         hist_style = bar_style = dafor_hist_style = dafor_sum_bar_style = style_hide
+        removal_ratio_style = style_hide
 
     elif indicator == "management":
         df_management = service.get_management_data(start_date, end_date)
-        # Merge locality names
         localities = service.get_locality_data()[['locality_id', 'name']]
         localities.columns = localities.columns.str.lower()
         df_management.columns = df_management.columns.str.lower()
         df_management = df_management.merge(localities, on='locality_id', how='left')
-        # Add year column for line chart
         df_management['year'] = pd.to_datetime(df_management['date']).dt.year
 
         fig_map = build_management_map_figure(df_management)
         fig_line = build_accumulated_mass_year_figure(df_management)
+        fig_removal_ratio = build_removal_ratio_year_figure(df_management)  # <-- Add this line
         line_style = style_show
-        # Hide other charts
         hist_style = bar_style = dafor_hist_style = dafor_sum_bar_style = style_hide
+        removal_ratio_style = style_show
+
     elif indicator == "days_since_management":
         df_days_since = service.get_days_since_last_management(start_date, end_date)
         # debug print
@@ -259,6 +266,7 @@ def update_visuals(indicator, selected_localities, start_date, end_date):
         bar_style = style_show
         dafor_hist_style = style_hide
         dafor_sum_bar_style = style_hide
+        removal_ratio_style = style_hide
    
     elif indicator == "days_since_monitoring":
         df_days_since = service.get_days_since_last_monitoring(start_date, end_date)
@@ -281,13 +289,14 @@ def update_visuals(indicator, selected_localities, start_date, end_date):
         bar_style = style_show
         dafor_hist_style = style_hide
         dafor_sum_bar_style = style_hide
+        removal_ratio_style = style_hide
     else:
         hist_style = bar_style = dafor_hist_style = dafor_sum_bar_style = style_hide
 
     return (
-        fig_map, fig_hist, fig_bar, fig_dafor_hist, fig_dafor_sum_bar, fig_line,
-        hist_style, bar_style, dafor_hist_style, dafor_sum_bar_style, line_style,
-        occurrences_table  # <--- Always return this as the last value
+        fig_map, fig_hist, fig_bar, fig_dafor_hist, fig_dafor_sum_bar, fig_line, fig_removal_ratio,
+        hist_style, bar_style, dafor_hist_style, dafor_sum_bar_style, line_style, removal_ratio_style,
+        occurrences_table
     )
     
 
