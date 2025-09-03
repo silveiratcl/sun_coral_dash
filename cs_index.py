@@ -11,7 +11,7 @@ from cs_map import (
     build_days_since_monitoring_map_figure,  # <-- Add this line
 )    
 
-from cs_controllers import cs_controls
+from cs_controllers import cs_controls, REBIO_LOCALITIES, REBIO_ENTORNO_LOCALITIES
 from services.data_service import CoralDataService
 from dash import Dash, html, dcc, Input, Output
 import dash_bootstrap_components as dbc
@@ -120,11 +120,24 @@ app.layout = dbc.Container(
 def update_visuals(indicator, selected_localities, start_date, end_date):
     service = CoralDataService()
 
-    # Normalize selected_localities
+    
+
+    # Normalize selected_localities to handle group selection
     if not selected_localities or 0 in (selected_localities if isinstance(selected_localities, list) else [selected_localities]):
         selected_localities = None
-    elif isinstance(selected_localities, int):
-        selected_localities = [selected_localities]
+    else:
+        ids = []
+        for loc in selected_localities if isinstance(selected_localities, list) else [selected_localities]:
+            if loc == "rebiogrp":
+                ids.extend(REBIO_LOCALITIES)
+            elif loc == "rebiogrp_entorno":
+                ids.extend(REBIO_ENTORNO_LOCALITIES)
+            else:
+                try:
+                    ids.append(int(loc))
+                except Exception:
+                    pass
+        selected_localities = list(set(ids)) if ids else None
 
     # Default empty figures
     fig_map = go.Figure()
@@ -230,6 +243,9 @@ def update_visuals(indicator, selected_localities, start_date, end_date):
         hist_style = bar_style = dafor_hist_style = dafor_sum_bar_style = style_hide
     elif indicator == "days_since_management":
         df_days_since = service.get_days_since_last_management(start_date, end_date)
+        # debug print
+        print("DataFrame for chart:", df_days_since.head())
+        print("Rows for chart:", len(df_days_since))
         if selected_localities:
             df_days_since = df_days_since[df_days_since['locality_id'].isin(selected_localities)]
         fig_map = build_days_since_management_map_figure(df_days_since)
@@ -246,8 +262,15 @@ def update_visuals(indicator, selected_localities, start_date, end_date):
    
     elif indicator == "days_since_monitoring":
         df_days_since = service.get_days_since_last_monitoring(start_date, end_date)
+        # debug print
+        #print("DataFrame for chart:", df_days_since.head())
+        #print("Rows for chart:", len(df_days_since))
+        print("All locality_ids in data:", df_days_since["locality_id"].unique())
         if selected_localities:
             df_days_since = df_days_since[df_days_since['locality_id'].isin(selected_localities)]
+            print("Selected localities:", selected_localities)
+            print("Filtered locality_ids:", df_days_since["locality_id"].unique())
+            print("Filtered rows:", len(df_days_since))
         fig_map = build_days_since_monitoring_map_figure(df_days_since)
         fig_bar = build_days_since_monitoring_bar_figure(df_days_since)  # <-- bar plot below map
         fig_hist = go.Figure()
