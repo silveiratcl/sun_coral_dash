@@ -83,7 +83,7 @@ cs_controls = dbc.Row([
         multi=True,
         placeholder="Selecionar Localidade"
     ),
-    html.H3("""Selecione o Indicador""", style={"margin-top": "30px", "margin-bottom": "20px"}),
+    html.H3("""Indicadores""", style={"margin-top": "30px", "margin-bottom": "20px"}),
     dcc.Dropdown(
         id="indicator-dropdown",
         options=[
