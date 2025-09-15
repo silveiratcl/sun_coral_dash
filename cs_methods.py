@@ -1,10 +1,18 @@
 from dash import html
 
 methods_layout = html.Div([
-    html.H2("Métodos Utilizados no Dashboard"),
-    html.P("""
-        Este painel utiliza os seguintes métodos para processar e visualizar os dados:
+    html.H1("Protocolo de Monitoramento"),
+    html.H2("""
+        Aquisição das informações em campo
     """),
+    html.P("""
+        Os dados de monitoramento são obtidos em localidades, onde é definido um segmento, 
+        e na extensão de um segmento são coletadas informações relacionadas a transectos a cada minuto.
+    """),
+
+    html.Img(src="assets/img/segmento.png", style={"width": "60%", "margin": "30px 0"}),
+
+
     html.Ul([
         html.Li([
             html.B("get_locality_data(): "),
