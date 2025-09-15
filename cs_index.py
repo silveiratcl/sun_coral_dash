@@ -8,7 +8,7 @@ from cs_map import (
     build_occurrence_map_figure,
     build_management_map_figure,
     build_days_since_management_map_figure,
-    build_days_since_monitoring_map_figure,  # <-- Add this line
+    build_days_since_monitoring_map_figure,  
 )    
 
 from cs_controllers import cs_controls, REBIO_LOCALITIES, REBIO_ENTORNO_LOCALITIES
@@ -22,11 +22,12 @@ from cs_histogram import (
     build_dafor_histogram_figure,
     build_dafor_sum_bar_figure,
     build_accumulated_mass_year_figure,
-    build_days_since_management_bar_figure,  # <-- Add this line
+    build_days_since_management_bar_figure,  
     build_days_since_monitoring_bar_figure,
     build_removal_ratio_year_figure
 ) 
 from cs_tables import build_occurrences_table
+from cs_methods import methods_layout  # Your text tab layout
 from services.data_service import CoralDataService
 #from cs_methods import methods_layout
 from dash import ctx
@@ -82,7 +83,14 @@ app.layout = dbc.Container(
                 "padding-top": "50px"
             }),
             dbc.Col([
-                dashboard_layout
+                dcc.Tabs([
+                    dcc.Tab(label='Dashboard', children=[
+                        dashboard_layout  # All your maps and charts together
+                    ]),
+                    dcc.Tab(label='Métodos', children=[
+                        methods_layout  # Your text, image, and back button
+                    ]),
+                ])
             ], md=9),
             
         ]),
@@ -110,7 +118,7 @@ app.layout = dbc.Container(
         Output("div-dafor-hist", "style"),
         Output("div-dafor-sum-bar", "style"),
         Output("div-line", "style"),
-        Output("div-removal-ratio", "style"),  # <-- ADD THIS LINE
+        Output("div-removal-ratio", "style"),  
         Output("occurrences-table-container", "children"),
     ],
     [

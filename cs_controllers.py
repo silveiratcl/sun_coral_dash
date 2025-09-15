@@ -13,6 +13,8 @@ print("name_to_id:", name_to_id)  # Debug print
 # REBIO group (with specified localities removed)
 REBIO_LOCALITIES = [
     name_to_id.get("Saco D'água"),
+    name_to_id.get("Costão do Saco D'água"),
+    name_to_id.get("Saquinho D'água"),
     name_to_id.get("Ponta do Letreiro"),
     name_to_id.get("Rancho Norte"),
     name_to_id.get("Pedra do Elefante"),
@@ -24,7 +26,7 @@ REBIO_LOCALITIES = [
     name_to_id.get("Portinho Norte"),
     name_to_id.get("Portinho Sul"),
     name_to_id.get("Saco da Mulata Norte"),
-    name_to_id.get("Saco da Mulata Sul"),
+    name_to_id.get("Saco da Mulata Sul"), # missing costao do saco dagua e saquinho dágua
 ]
 REBIO_LOCALITIES = [id for id in REBIO_LOCALITIES if id is not None]
 print("REBIO_LOCALITIES:", REBIO_LOCALITIES)

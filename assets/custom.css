@@ -1,0 +1,36 @@
+.tab-content {
+    background-color: #222 !important; /* dark background */
+    color: #eee !important;            /* light text */
+    padding: 30px;
+    border-radius: 10px;
+}
+
+.dash-tabs {
+    background-color: #333 !important;
+    color: #eee !important;
+    border-radius: 10px;
+}
+
+/* Target tab labels with dynamic classes */
+div.tab {
+    background-color: #575656 !important;
+    color: #bbb !important;
+    border: none !important;
+    font-weight: 500;
+}
+
+div.tab--selected {
+    background-color: #86adf5 !important;
+    color: #222 !important;
+    border-bottom: 2px solid #00bfff !important;
+    font-weight: 700;
+}
+
+/* Target the tab content area (the content below the tabs) */
+.tab-content, .dash-tabs-content, div.tab-pane {
+    background-color: #181818 !important;
+    color: #eee !important;
+    border-radius: 10px;
+    border: none !important;
+    padding: 30px;
+}
