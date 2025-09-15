@@ -86,14 +86,14 @@ app.layout = dbc.Container(
                 "padding-top": "50px"
             }),
             dbc.Col([
-                dcc.Tabs([
-                    dcc.Tab(label='Dashboard', children=[
-                        dashboard_layout  # All your maps and charts together
-                    ]),
-                    dcc.Tab(label='Métodos', children=[
-                        methods_layout  # Your text, image, and back button
-                    ]),
-                ])
+                dcc.Tabs(
+    id="main-tabs",
+    value="dashboard",  # default tab
+    children=[
+        dcc.Tab(label='Dashboard', value="dashboard", children=[dashboard_layout]),
+        dcc.Tab(label='Métodos e Texto', value="methods", children=[methods_layout]),
+    ]
+)
             ], md=9),
             
         ]),
@@ -390,14 +390,14 @@ app.layout = dbc.Container(
                 "padding-top": "50px"
             }),
             dbc.Col([
-                dcc.Tabs([
-                    dcc.Tab(label='Dashboard', children=[
-                        dashboard_layout  # All your maps and charts together
-                    ]),
-                    dcc.Tab(label='Métodos', children=[
-                        methods_layout  # Your text, image, and back button
-                    ]),
-                ])
+                dcc.Tabs(
+    id="main-tabs",
+    value="dashboard",  # default tab
+    children=[
+        dcc.Tab(label='Dashboard', value="dashboard", children=[dashboard_layout]),
+        dcc.Tab(label='Métodos e Texto', value="methods", children=[methods_layout]),
+    ]
+)
             ], md=9),
             
         ]),
@@ -429,6 +429,18 @@ def update_metrics(indicator, selected_localities, start_date, end_date):
     km_monitored = service.get_km_monitored(start_date, end_date)
 
     return f"{total_mass:,.0f}", f"{num_actions:,}", f"{km_monitored:,.2f}"
+
+from dash.dependencies import Input, Output
+
+@app.callback(
+    Output("main-tabs", "value"),
+    Input("back-to-dashboard-btn", "n_clicks"),
+    prevent_initial_call=True
+)
+def go_back_to_dashboard(n_clicks):
+    if n_clicks:
+        return "dashboard"
+    return dash.no_update
 
 if __name__ == "__main__":
     app.run(debug=True)
