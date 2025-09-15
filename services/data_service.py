@@ -29,7 +29,8 @@ class CoralDataService:
             df['date'] = pd.to_datetime(df['date'])
             df = df[(df['date'] >= start_date) & (df['date'] <= end_date)]
         return df
-
+    
+    
         
 
     def calculate_locality_length(self, coords_local):
@@ -37,6 +38,19 @@ class CoralDataService:
 
         try:
             coords = json.loads(coords_local)
+            if not coords or len(coords) < 2:
+                return 0
+            return sum(
+                geodesic(coords[i], coords[i+1]).meters
+                for i in range(len(coords)-1)
+            )
+        except Exception:
+            return 0
+
+    def calculate_dafor_length(self, dafor_coords):
+        """Calculate the length (in meters) of a DAFOR line from its coordinates."""
+        try:
+            coords = json.loads(dafor_coords)
             if not coords or len(coords) < 2:
                 return 0
             return sum(
@@ -215,3 +229,10 @@ class CoralDataService:
         today = pd.Timestamp.now().normalize()
         last_dates['days_since'] = (today - last_dates['date']).dt.days
         return last_dates
+    
+    def get_km_monitored(self, start_date=None, end_date=None):
+        """Sum the lengths of all DAFOR lines (in kilometers) for the given date range."""
+        df_dafor = self.get_dafor_data(start_date, end_date)
+        df_dafor['length_m'] = df_dafor['dafor_coords'].apply(self.calculate_dafor_length)
+        total_km = df_dafor['length_m'].sum() / 1000  # convert meters to kilometers
+        return total_km

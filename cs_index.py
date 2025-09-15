@@ -77,7 +77,10 @@ modal = dbc.Modal(
 app.layout = dbc.Container(
     [
         dbc.Row([
-            dbc.Col([cs_controls], md=3, style={
+            dbc.Col([
+                cs_controls,
+                #metrics_widgets,  # <-- Add this line
+            ], md=3, style={
                 "padding-right": "25px",
                 "padding-left": "25px",
                 "padding-top": "50px"
@@ -358,6 +361,74 @@ def display_modal(clickData, n_close, is_open):
         return False, no_update
 
     return is_open, no_update
+
+# Define your metrics layout here
+metrics_layout = dbc.Row([
+    dbc.Col(dbc.Card([
+        dbc.CardHeader("Massa Manejada (kg)"),
+        dbc.CardBody(html.H4(id="total-mass-managed", children="0"))
+    ], color="primary", inverse=True), md=4),
+    dbc.Col(dbc.Card([
+        dbc.CardHeader("Ações de Manejo"),
+        dbc.CardBody(html.H4(id="num-management-actions", children="0"))
+    ], color="info", inverse=True), md=4),
+    dbc.Col(dbc.Card([
+        dbc.CardHeader("Km Monitorados"),
+        dbc.CardBody(html.H4(id="km-monitored", children="0"))
+    ], color="secondary", inverse=True), md=4),
+], className="mb-4")
+
+app.layout = dbc.Container(
+    [
+        dbc.Row([
+            dbc.Col([
+                cs_controls,
+                metrics_layout,  # <-- Add this line
+            ], md=3, style={
+                "padding-right": "25px",
+                "padding-left": "25px",
+                "padding-top": "50px"
+            }),
+            dbc.Col([
+                dcc.Tabs([
+                    dcc.Tab(label='Dashboard', children=[
+                        dashboard_layout  # All your maps and charts together
+                    ]),
+                    dcc.Tab(label='Métodos', children=[
+                        methods_layout  # Your text, image, and back button
+                    ]),
+                ])
+            ], md=9),
+            
+        ]),
+        modal,  # <--  modal here, outside the Row so it overlays the whole page
+    ],
+    fluid=True,
+)
+
+@app.callback(
+    [
+        Output("total-mass-managed", "children"),
+        Output("num-management-actions", "children"),
+        Output("km-monitored", "children"),
+    ],
+    [
+        Input("indicator-dropdown", "value"),
+        Input("locality-dropdown", "value"),
+        Input("date-range", "start_date"),
+        Input("date-range", "end_date"),
+    ]
+)
+def update_metrics(indicator, selected_localities, start_date, end_date):
+    service = CoralDataService()
+    # Replace with your real data logic:
+    df_management = service.get_management_data(start_date, end_date)
+    total_mass = df_management["managed_mass_kg"].sum()
+    num_actions = len(df_management)
+    # Example: if you have a column 'km_monitored'
+    km_monitored = service.get_km_monitored(start_date, end_date)
+
+    return f"{total_mass:,.0f}", f"{num_actions:,}", f"{km_monitored:,.2f}"
 
 if __name__ == "__main__":
     app.run(debug=True)
