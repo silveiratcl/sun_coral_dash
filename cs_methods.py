@@ -13,11 +13,11 @@ methods_layout = html.Div([
     html.Br(),
     html.Br(),
     html.H3("""
-            Um dashboard é uma ferramenta que permite aos usuários visualizar e compreender dados complexos de forma simples.
-            Ao atuar como uma centralização de dados processados, ele apresenta métricas essenciais, tendências em um formato visualmente
-            atraente e intuitivo. Isso o torna uma solução ideal para agências ambientais que buscam adquirir elementos a Detecção Precoce -   
+            Um dashboard de dados é uma ferramenta que permite aos usuários visualizar e compreender dados complexos de forma simples.
+            Ao atuar como uma centralização de dados processados, ele pode apresentas métricas essenciais e tendências em um formato visualmente
+            intuitivo. Isso o torna uma solução ideal para agências ambientais que buscam adquirir elementos para a Detecção Precoce -   
            Resposta Rápida (EDRR) de espécies invasoras. Nesta documentação, exploraremos os componentes fundamentais da interpretação de dados no 
-           Dashboard de Monitoramento do Coral-Sol - PACS REBIO Arvoredo.
+           Dashboard de Monitoramento do Coral-Sol - *PACS REBIO Arvoredo.
     """),
     html.Br(), 
     html.Br(),
@@ -35,7 +35,7 @@ methods_layout = html.Div([
     html.Br(),
 
     html.Img(src="assets/img/segmento.png", 
-             style={"width": "50%", 
+             style={"width": "30%", 
                     "margin": "30px auto", 
                     "display": "block", 
                     "border-radius": "20px"}),  
@@ -64,7 +64,7 @@ methods_layout = html.Div([
     html.Br(),
 
     html.Img(src="assets/img/monitora_dash.png", 
-             style={"width": "50%", 
+             style={"width": "30%", 
                     "margin": "30px auto", 
                     "display": "block", 
                     "border-radius": "20px"}),  
@@ -126,7 +126,7 @@ methods_layout = html.Div([
            """),
     html.Br(),
     html.Img(src="assets/img/dafor_eng.png", 
-             style={"width": "50%", 
+             style={"width": "30%", 
                     "margin": "30px auto", 
                     "display": "block", 
                     "border-radius": "20px"}), 
@@ -136,10 +136,6 @@ methods_layout = html.Div([
     html.P("Esta seção está em construção e será atualizada em breve."),
     html.Br(),
     html.Br(),
-                    
-
-
-
 
 
     html.H1("Referências e Links úteis"),
@@ -156,8 +152,14 @@ methods_layout = html.Div([
         html.Li("SILVEIRA, T.C.L.; CARVALHAL, A.; SEGAL, B. 2023. Protocolo Técnico de monitoramento de coral-sol na REBIO Arvoredo e entorno. In: Protocolos Técnicos de Campo. PACS Arvoredo. Projeto PACS Arvoredo. Florianópolis, 56 p."),
         html.Li("SUTHERLAND, W.J. 2006. Ecological Census Techniques: A Handbook. 2nd edition. Cambridge University Press, Cambridge, UK."),
     ]),
+    html.Br(),
 
-
+    html.H3("*PACS Arvoredo"),
+    html.P("""
+        O PACS Arvoredo (Plano de Ação para Prevenção e Controle do Coral-sol na REBIO Arvoredo e Entorno) é uma condicionante da Licença de Operação nº 1587/2020 emitida pelo IBAMA em 08/07/2020 referente ao Sistema de 
+        Desenvolvimento da Produção de Petróleo do Campo de Baúna, localizado na Bacia de Santos, sob concessão da Karoon Energy e tem como principal objetivo gerar conhecimento científico sobre a espécie 
+        Tubastraea coccinea (coral-sol) e o desenvolvimento de ferramentas e técnicas para a prevenção e controle desta espécie na REBIO Arvoredo e entorno.
+           """),
 
 
 
