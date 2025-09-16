@@ -9,13 +9,13 @@ methods_layout = html.Div([
     html.Br(),                
     html.Br(),
 
-    html.H1("Dashboard dos dados Monitoramento e Manejo de coral-sol"), 
+    html.H1("Dados do Monitoramento e Manejo do coral-sol - REBIO Arvoredo"), 
     html.Br(),
     html.Br(),
-    html.P("""
-            Um dashboard é uma ferramenta incrivelmente valiosa que permite aos usuários visualizar e compreender dados complexos de forma simples.
-            Ao atuar como uma centralização de dados processados, ele apresenta uma riqueza de métricas essenciais, tendências em um formato visualmente
-            atraente e intuitivo. Isso o torna uma solução ideal para agências ambientais que buscam adquirir recursos valiosos para a Detecção Precoce -   
+    html.H3("""
+            Um dashboard é uma ferramenta que permite aos usuários visualizar e compreender dados complexos de forma simples.
+            Ao atuar como uma centralização de dados processados, ele apresenta métricas essenciais, tendências em um formato visualmente
+            atraente e intuitivo. Isso o torna uma solução ideal para agências ambientais que buscam adquirir elementos a Detecção Precoce -   
            Resposta Rápida (EDRR) de espécies invasoras. Nesta documentação, exploraremos os componentes fundamentais da interpretação de dados no 
            Dashboard de Monitoramento do Coral-Sol - PACS REBIO Arvoredo.
     """),
@@ -28,7 +28,7 @@ methods_layout = html.Div([
         Aquisição das informações em campo
     """),
     html.Br(),
-    html.P("""
+    html.H3("""
         Os dados de monitoramento são obtidos em localidades, onde é definido um segmento, 
         e na extensão de um segmento são coletadas informações relacionadas a transectos a cada minuto.
     """),
@@ -47,8 +47,7 @@ methods_layout = html.Div([
     html.H2("""
         Snorkeling
     """),
-
-    html.P("""
+    html.H3("""
             Na faixa de profundidade de zero a 2 metros do segmento de amostragem, o monitoramento será realizado por um mergulhador de snorkeling. 
             O mergulhador buscará dentro dessa faixa de profundidade, cobrindo o segmento de amostragem e procurando possíveis ocorrências de coral-sol.
     """),
@@ -56,7 +55,7 @@ methods_layout = html.Div([
      html.H2("""
         Mergulho Autônomo (SCUBA)
     """),
-    html.P("""
+    html.H3("""
         As amostras de mergulho autônomo serão conduzidas por dois pares de mergulhadores. A área operacional para cada par será determinada 
            por faixas de profundidade (por exemplo, de 0 a 8m e de 9 a 15m) ao longo da costa rochosa, visando cobrir a maior extensão vertical 
            possível. A divisão das profundidades de varredura entre os pares pode variar dependendo das características batimétricas de cada segmento de amostragem.
@@ -76,7 +75,7 @@ methods_layout = html.Div([
     html.Br(),
     html.Br(),
 
-    html.P("""
+    html.H3("""
            Para classificar os níveis de invasão nos segmentos amostrados, utilizamos uma escala semi-quantitativa de abundância 
            conhecida como escala DAFOR (Sutherland, 2006), especificamente adaptada para avaliar a abundância de coral-sol (Creed & Fleury, 2009). 
            A escala atribui valores a cada classe de abundância relativa, que são descritas da seguinte forma:
@@ -84,32 +83,32 @@ methods_layout = html.Div([
     html.Br(),
     html.Ul([
         html.Li([
-            html.B("Dominante:"),
+            html.H3("Dominante:"),
             "Esta categoria representa populações altamente evidentes que formam predominantemente manchas monoespecíficas de pelo menos 1m². Essas manchas contêm numerosas colônias isoladas e/ou manchas menores espalhadas pelo substrato."
         ]),
         html.Br(),
         html.Li([
-            html.B("Abundante: "),
+            html.H3("Abundante: "),
             "Os agrupamentos nesta categoria formam manchas essencialmente monoespecíficas variando de 50 a 100 cm de diâmetro. Semelhante à categoria dominante, colônias isoladas e/ou pequenas manchas espalhadas podem ser observadas ao longo do substrato."
         ]),
         html.Br(),
         html.Li([
-            html.B("Frequente: "),
+            html.H3("Frequente: "),
             "Esta classe inclui colônias isoladas e/ou pequenas manchas variando de 10 a 50 cm de diâmetro, espalhadas pelo substrato."
         ]),
         html.Br(),
         html.Li([
-            html.B("Ocasional: "),
+            html.H3("Ocasional: "),
             "Esta categoria abrange casos em que entre 1 e 5 colônias estão dispersas pelo substrato."
         ]),
         html.Br(),
         html.Li([
-            html.B("Raro: "),
+            html.H3("Raro: "),
             "Esta categoria abrange casos em que entre 1 e 5 colônias estão dispersas pelo substrato."
         ]),
         html.Br(),
         html.Li([
-            html.B("Ausente: "),
+            html.H3("Ausente: "),
             "Sem registro de coral-sol no minuto amostrado."
         ]),
     ]),

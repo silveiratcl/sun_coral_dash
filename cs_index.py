@@ -395,7 +395,7 @@ app.layout = dbc.Container(
     value="dashboard",  # default tab
     children=[
         dcc.Tab(label='Dashboard', value="dashboard", children=[dashboard_layout]),
-        dcc.Tab(label='Métodos e Texto', value="methods", children=[methods_layout]),
+        dcc.Tab(label='Sobre', value="methods", children=[methods_layout]),
     ]
 )
             ], md=9),
