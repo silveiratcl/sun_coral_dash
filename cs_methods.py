@@ -34,11 +34,24 @@ methods_layout = html.Div([
     """),
     html.Br(),
 
+    
+html.Figure([
     html.Img(src="assets/img/segmento.png", 
-             style={"width": "30%", 
+             style={"width": "50%", 
                     "margin": "30px auto", 
                     "display": "block", 
-                    "border-radius": "20px"}),  
+                    "border-radius": "20px"}),
+    html.Figcaption("Esquema de obtenção dos dados.", style={
+        "text-align": "center",
+        "color": "#aaa",
+        "font-size": "2rem",
+        "margin-top": "08px"
+    })
+]),
+
+
+
+
 
     html.Br(),
     html.Br(),
@@ -63,11 +76,25 @@ methods_layout = html.Div([
     html.Br(),
     html.Br(),
 
+    
+    html.Figure([
     html.Img(src="assets/img/monitora_dash.png", 
-             style={"width": "30%", 
+             style={"width": "50%", 
                     "margin": "30px auto", 
                     "display": "block", 
-                    "border-radius": "20px"}),  
+                    "border-radius": "20px"}),
+    html.Figcaption("Esquema operacional por batimetria no monitoramento.", style={
+        "text-align": "center",
+        "color": "#aaa",
+        "font-size": "2rem",
+        "margin-top": "08px"
+    })
+]),
+
+
+
+
+
     html.Br(),
     html.Br(),
 
@@ -124,18 +151,70 @@ methods_layout = html.Div([
               e seus respectivos valores de RAI.
         
            """),
-    html.Br(),
-    html.Img(src="assets/img/dafor_eng.png", 
-             style={"width": "30%", 
+   
+    html.Figure([
+    html.Img(src="assets/img/dafor_pt.png", 
+             style={"width": "50%", 
                     "margin": "30px auto", 
                     "display": "block", 
-                    "border-radius": "20px"}), 
+                    "border-radius": "20px"}),
+    html.Figcaption("Escala DAFOR utilizada nos monitoramentos (Sergio Coelho; CREED, et al. 2025.)", style={
+        "text-align": "center",
+        "color": "#aaa",
+        "font-size": "2rem",
+        "margin-top": "08px"
+    })
+]),
+
+
+
+
     html.Br(),
     html.Br(),
-    html.H1("Indicadores - em construção"),
-    html.P("Esta seção está em construção e será atualizada em breve."),
+    html.H1("Indicadores"),
     html.Br(),
     html.Br(),
+
+    html.H3("""
+           Alguns indicadores foram desenvolvidos para avaliação das das ações de monitoramento e manejo da invasão do coral-sol na REBIO Arvoredo e entorno
+           Abaixo exploramos cada um dos indicadores desenvolvidos:
+           """),
+    html.Br(),
+    html.Ul([
+        html.Li([
+            html.H3("Detecçoes por Unidade de Esforço (DPUE)"),
+            "Este indicador é calculado dividindo o número total de detecções de coral-sol pelo esforço total de amostragem, medido em minutos e unidades de tamanho da localidade. O DPUE fornece uma medida padronizada da frequência de detecção do coral-sol ao longo do tempo, permitindo a comparação entre diferentes períodos e locais de amostragem."
+        ]),
+        html.Br(),
+        html.Li([
+            html.H3("Indice de Abundância Relativa (IAR-DAFOR)"),
+            " Este indicador é derivado da escala DAFOR, que classifica a abundância do coral-sol em categorias qualitativas (Dominante, Abundante, Frequente, Ocasional, Raro, Ausente). "
+            "Cada categoria é atribuída a um valor numérico específico. Nos gráficos no IAR-DAFOR é representado pela soma dos valores de RAI (Índice de Abundância Relativa) por localidade. Tanbém é possível observar a distribuição das categorias DAFOR por uma ou mais localidades." 
+        ]),
+        html.Br(),
+        html.Li([
+            html.H3("Ocorrências"),
+            "Este indicar apresenta no mapa as ocorrências de coral-sol por localidade, permitindo a visualização espacial da distribuição da espécie invasora e informações locais"
+        ]),
+        html.Br(),
+        html.Li([
+            html.H3("Massa manejada"),
+            "Este indicador representa a quantidade total de coral-sol manejada por localidade ao longo do tempo. A massa manejada é uma medida importante para avaliar a eficácia das ações de controle e manejo da espécie invasora."
+        ]),
+        html.Br(),
+        html.Li([
+            html.H3("Último Manejo (dias)"),
+            " Este indicador mostra o número de dias desde a última ação de manejo realizada em cada localidade. Ele é útil para monitorar a frequência das intervenções e garantir que as áreas sejam manejadas regularmente para controlar a população de coral-sol."
+        ]),
+        html.Br(),
+        html.Li([
+            html.H3("Último monitoramento (dias)"),
+            "Este indicador mostra o número de dias desde o último monitoramento realizado em cada localidade. Ele é útil para garantir que as áreas sejam monitoradas regularmente."
+        ]),
+    ]),
+    html.Br(),
+    html.Br(),
+    
 
 
     html.H1("Referências e Links úteis"),
