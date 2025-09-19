@@ -48,9 +48,10 @@ REBIO_ENTORNO_LOCALITIES = list(set(REBIO_LOCALITIES + ENTORNO_LOCALITIES))
 print("REBIO_ENTORNO_LOCALITIES:", REBIO_ENTORNO_LOCALITIES)
 
 GROUP_OPTIONS = [
-    {"label": "Todas", "value": 0},
-    {"label": "REBIO", "value": "rebiogrp"},
     {"label": "REBIO + Entorno Imediato", "value": "rebiogrp_entorno"},
+    {"label": "REBIO", "value": "rebiogrp"},
+    {"label": "Todas", "value": 0},
+   
 ]
 
 locality_options = GROUP_OPTIONS + sorted(
@@ -79,7 +80,7 @@ cs_controls = dbc.Row([
     dcc.Dropdown(
         id="locality-dropdown",
         options=locality_options,
-        value=0,
+        value=["rebiogrp_entorno"],
         multi=True,
         placeholder="Selecionar Localidade"
     ),
