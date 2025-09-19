@@ -34,3 +34,17 @@ div.tab--selected {
     border: none !important;
     padding: 30px;
 }
+
+.Select-control, .Select-menu-outer, .Select-menu, .Select-option, .VirtualizedSelectOption {
+    background-color: #222 !important;
+    color: #fff !important;
+    border-color: #444 !important;
+}
+
+.Select-placeholder, .Select-value-label, .Select-value {
+    color: #fff !important;
+}
+
+.Select-arrow-zone, .Select-arrow {
+    color: #fff !important;
+}
