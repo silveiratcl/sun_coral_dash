@@ -151,11 +151,23 @@ def build_dafor_histogram_figure(dafor_values):
 
 def build_dafor_sum_bar_figure(df_dafor_sum):
     """
-    Builds a horizontal bar chart for the sum of DAFOR values by locality using Plotly Express.
-    Expects a DataFrame with columns: ['locality_id', 'name', 'date', 'DAFOR'].
+    Builds a stacked horizontal bar chart for the sum of DAFOR values by locality and DAFOR category.
+    Only includes localities with total DAFOR > 0 and excludes the 'Ausente' category.
+    Expects columns: ['locality_id', 'name', 'date', 'DAFOR'] where DAFOR is numeric.
     """
+    import pandas as pd
     import plotly.express as px
     import plotly.graph_objects as go
+
+    dafor_num_to_label = {
+        10: "D", 8: "A", 6: "F", 4: "O", 2: "R"
+        # 0: "Ausente"  # Exclude Ausente
+    }
+    category_order = [10, 8, 6, 4, 2]
+    category_labels = [dafor_num_to_label[v] for v in category_order]
+
+    def map_to_category(val):
+        return min(category_order, key=lambda x: abs(x - val))
 
     if df_dafor_sum.empty or df_dafor_sum["DAFOR"].dropna().empty:
         fig = go.Figure()
@@ -169,36 +181,55 @@ def build_dafor_sum_bar_figure(df_dafor_sum):
         )
         return fig
 
-    # Group by locality to get the total sum per locality (across all dates)
-    df_grouped = df_dafor_sum.groupby(['locality_id', 'name'], as_index=False)['DAFOR'].sum()
-    df_grouped = df_grouped[df_grouped["DAFOR"] > 0]
-    df_grouped = df_grouped.sort_values("DAFOR", ascending=False)
+    df = df_dafor_sum.copy()
+    df = df[df["DAFOR"] > 0]  # Exclude Ausente and zero values
+    df["DAFOR_CAT"] = df["DAFOR"].apply(map_to_category)
+    df["DAFOR_CLASS"] = df["DAFOR_CAT"].map(dafor_num_to_label)
 
-    # Ensure 'name' is string and categorical for ordering
-    df_grouped['name'] = df_grouped['name'].astype(str)
-    df_grouped['name'] = pd.Categorical(df_grouped['name'], categories=df_grouped['name'], ordered=True)
+    df_grouped = (
+        df.groupby(['name', 'DAFOR_CLASS'], as_index=False)['DAFOR'].sum()
+    )
+
+    pivot = df_grouped.pivot(index='name', columns='DAFOR_CLASS', values='DAFOR').fillna(0)
+
+    for label in category_labels:
+        if label not in pivot.columns:
+            pivot[label] = 0
+
+    pivot = pivot[category_labels]
+    pivot["total"] = pivot.sum(axis=1)
+    pivot = pivot[pivot["total"] > 0]  # Only localities with total > 0
+    pivot = pivot.sort_values("total", ascending=False)
+
+    df_long = pivot.reset_index().melt(id_vars=["name", "total"], value_vars=category_labels,
+                                       var_name="DAFOR_CLASS", value_name="SUM")
+
+    df_long['name'] = pd.Categorical(df_long['name'], categories=pivot.index, ordered=True)
+    df_long['DAFOR_CLASS'] = pd.Categorical(df_long['DAFOR_CLASS'], categories=category_labels, ordered=True)
 
     fig = px.bar(
-        df_grouped,
-        x="DAFOR",
+        df_long,
+        x="SUM",
         y="name",
+        color="DAFOR_CLASS",
         orientation="h",
         template="plotly_dark",
-        labels={"DAFOR": "Soma DAFOR por Localidade", "name": "Localidade"},
-        text="name",
+        labels={"SUM": "Soma DAFOR por Localidade", "name": "Localidade", "DAFOR_CLASS": "Categoria DAFOR"},
+        category_orders={"DAFOR_CLASS": category_labels},
+        text="SUM",
     )
-    fig.update_traces( insidetextanchor='start')
-    #fig.update_traces(textposition='inside', insidetextanchor='middle')
     fig.update_layout(
-        yaxis=dict(autorange="reversed", showticklabels=False),
+        barmode="stack",
+        yaxis=dict(autorange="reversed", showticklabels=True),
         yaxis_title=None,
-       title={
-        "text": "Soma das pontuações DAFOR por localidade",
-        "x": 0,  # Left justify
-        "xanchor": "left"
-    },
+        title={
+            "text": "Soma das pontuações DAFOR por localidade (sem categoria Ausente)",
+            "x": 0,
+            "xanchor": "left"
+        },
         margin={"r":10,"t":35,"l":10,"b":40},
-        height=500
+        height=500,
+        legend_title_text="Categoria DAFOR"
     )
     return fig
 
