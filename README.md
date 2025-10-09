@@ -1,51 +1,64 @@
-![5](https://user-images.githubusercontent.com/63136680/171273589-5c5f64c4-0d5d-43d6-88bd-b32ea35cbcde.jpg)
+![Coral-sol](https://user-images.githubusercontent.com/63136680/171273589-5c5f64c4-0d5d-43d6-88bd-b32ea35cbcde.jpg)
 
+# Sun Coral Dashboard
 
-# Real Estate Analyzer
-Este é um dashboard desenvolvido apenas em Python, para análise de vendas no mercado imobiliário de Nova Iorque. Para a criação do mapa, usamos a API do Mapbox.
+Este é um painel interativo desenvolvido em Python para o monitoramento e manejo do coral-sol (*Tubastraea spp.*) na REBIO Arvoredo e entorno. O dashboard integra dados de campo, ações de manejo e indicadores ecológicos, facilitando a visualização e análise para pesquisadores e gestores ambientais.
 
-## 🔧 Funções
+## 🔧 Funcionalidades
 
-- Apresenta todas as transações de imóveis em Nova Iorque entre 2016 e 2017
-- Obter a localização dos imóveis por ordem de preço
-- Filtrar os imóveis no mapa a partir do seu tamanho
+- Visualização de mapas interativos:
+  - Detecção por Unidade de Esforço (DPUE)
+  - Índice de Abundância Relativa (IAR-DAFOR)
+  - Ocorrências georreferenciadas com fotos
+  - Dias desde o último manejo ou monitoramento
+  - Massa total manejada por localidade
+- Gráficos de barras e histogramas DAFOR
+- Documentação dos protocolos de monitoramento e manejo
+- Referências científicas e links úteis
 
-## 💻 Projeto
-Para ver as aulas do desenvolvimento do projeto completo em vídeo:
+## 💻 Estrutura do Projeto
 
-<a href = "https://asimov.academy/analise-vendas-nyc/"><img src="https://img.shields.io/badge/ASIMOV-Aulas%20do%20projeto-lightgrey"></a> 
+- `cs_index.py`: Arquivo principal do Dash, gerencia layout e navegação
+- `cs_map.py`: Funções para mapas interativos
+- `cs_histogram.py`: Funções para gráficos DAFOR
+- `cs_methods.py`: Documentação e protocolos
+- `services/data_service.py`: Consulta e processamento dos dados
+- `assets/`: Imagens e arquivos estáticos
 
-Para ver o projeto em tempo real:
+## 🚀 Como Executar
 
-<a href = "https://real-estate-dash.herokuapp.com/"><img src="https://img.shields.io/badge/ASIMOV-Projeto%20em%20tempo%20real-lightgrey" target="_blank"></a> 
-
+1. Instale as dependências:
+   ```sh
+   pip install dash plotly pandas numpy sqlalchemy geopy dash-bootstrap-components matplotlib
+   ```
+2. Configure a conexão com o banco em `config/database.py`
+3. Execute o aplicativo:
+   ```sh
+   python cs_index.py
+   ```
 
 ## 👨‍💻 Tecnologias Utilizadas
 
-Utilizando apenas **PYTHON** e as bibliotecas:
-> - Dash
-> - Dash Core Components
-> - Plotly
-> - Requests
-> - Pandas 
-> - NumPy 
+- Python
+- Dash
+- Plotly
+- Pandas
+- NumPy
+- SQLAlchemy
+- Geopy
+- Dash Bootstrap Components
+- Matplotlib
 
+## 📜 Referências
 
-## 📜 Conteúdo
-Para aprender mais sobre como desenvolver projetos de Data Science, AI, Criação de Web Apps e Dashboards, acesse:
+- Creed et al. (2025). *A bioinvasão do Coral-Sol. in press.*
+- Sutherland, W.J. (2006). *Ecological Census Techniques: A Handbook.*
+- Veja `cs_methods.py` para a bibliografia completa.
 
-<a href = "https://asimov.academy/"><img src="https://img.shields.io/badge/ASIMOV-Saiba%20Mais-lightgrey" target="_blank"></a> 
+## 🤝 Suporte/Contato
 
-### 🤝 Suporte/Contato
+Para dúvidas ou contribuições, entre em contato com os mantenedores do projeto ou abra uma issue no repositório.
 
+---
 
-[![Whatsapp Badge](https://img.shields.io/badge/WhatsApp-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://wa.me/5551981830833)
-[![Instagram Badge](https://img.shields.io/badge/Instagram-E4405F?style=for-the-badge&logo=instagram&logoColor=white)](https://www.instagram.com/asimov.academy/)
-[![Discord Badge](https://img.shields.io/badge/Discord-7289DA?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/W2Nc7bxvk7)
-
-✉ contato@asimov.academy
-
-
-
-
-<p align="center">Copyright © 2022 Asimov Academy</p>
+<p align="center">Copyright © 2024 Projeto Sun Coral Dashboard</p>
