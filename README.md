@@ -1,4 +1,4 @@
-![Coral-sol](https://user-images.githubusercontent.com/63136680/171273589-5c5f64c4-0d5d-43d6-88bd-b32ea35cbcde.jpg)
+
 
 # Sun Coral Dashboard
 
