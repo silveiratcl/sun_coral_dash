@@ -169,7 +169,7 @@ methods_layout = html.Div([
     html.Br(),
     html.Br(),
 
-    html.H1("Índice de Abundância Relativa",
+    html.H1("ÍNDICE DE ABUNDÂNCIA RELATIVA",
             style={
     "marginTop": "20px",
     "marginBottom": "10px",
@@ -216,7 +216,7 @@ methods_layout = html.Div([
            """),
     html.Br(),
     html.Br(),
-    html.H1("Estratégias",
+    html.H1("ESTRATÉGIAS",
             style={
     "marginTop": "20px",
     "marginBottom": "10px",
@@ -241,7 +241,7 @@ html.Ul([
 ]),
     html.Br(),
     html.Br(),
-    html.H1("Ferramentas de Manejo",
+    html.H1("FERRAMENTAS DE MANEJO",
             style={
     "marginTop": "20px",
     "marginBottom": "10px",
