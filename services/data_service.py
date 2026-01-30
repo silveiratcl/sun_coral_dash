@@ -237,3 +237,49 @@ class CoralDataService:
         df_dafor['length_m'] = df_dafor['dafor_coords'].apply(self.calculate_dafor_length)
         total_km = df_dafor['length_m'].sum() / 1000  # convert meters to kilometers
         return total_km
+    
+    def get_monitoring_events_by_locality(self, start_date=None, end_date=None):
+        """
+        Count the number of monitoring events (transects) per locality.
+        Returns a DataFrame with locality_id, name, and event_count.
+        """
+        df_dafor = self.get_dafor_data(start_date, end_date)
+        df_locality = self.get_locality_data()
+        
+        # Count events per locality
+        event_counts = df_dafor.groupby('locality_id').size().reset_index(name='event_count')
+        
+        # Merge with locality data to get names and coordinates
+        result = event_counts.merge(
+            df_locality[['locality_id', 'name', 'LATITUDE', 'LONGITUDE']], 
+            on='locality_id', 
+            how='left'
+        )
+        
+        return result
+    
+    def get_transect_coordinates_for_density(self, start_date=None, end_date=None):
+        """
+        Extract all transect coordinates for kernel density estimation.
+        Returns a DataFrame with individual coordinate points from all transects.
+        """
+        df_dafor = self.get_dafor_data(start_date, end_date)
+        
+        # Parse coordinates and flatten to individual points
+        points = []
+        for _, row in df_dafor.iterrows():
+            try:
+                coords = json.loads(row['dafor_coords'])
+                if coords and isinstance(coords, list):
+                    for coord in coords:
+                        if isinstance(coord, list) and len(coord) == 2:
+                            points.append({
+                                'latitude': coord[0],
+                                'longitude': coord[1],
+                                'locality_id': row['locality_id'],
+                                'date': row['date']
+                            })
+            except Exception:
+                continue
+        
+        return pd.DataFrame(points)

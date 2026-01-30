@@ -681,3 +681,140 @@ def build_days_since_monitoring_map_figure(df_days_since):
 
 #############################
 
+
+def build_monitoring_density_map_figure(points_df):
+    """
+    Build a kernel density map showing monitoring intensity using a 10x10 meter grid.
+    Uses Plotly's density_mapbox for visualization.
+    
+    Args:
+        points_df: DataFrame with 'latitude' and 'longitude' columns
+    """
+    if points_df.empty:
+        return go.Figure()
+    
+    # Use Plotly's built-in density mapping
+    import plotly.express as px
+    
+    # Calculate center for map
+    mean_lat = points_df['latitude'].mean()
+    mean_lon = points_df['longitude'].mean()
+    
+    fig = px.density_mapbox(
+        points_df, 
+        lat='latitude', 
+        lon='longitude',
+        radius=10,  # 10 meter radius for kernel density
+        center=dict(lat=mean_lat, lon=mean_lon),
+        zoom=12,
+        mapbox_style="satellite-streets",
+    )
+    
+    fig.update_layout(
+        template="plotly_dark",
+        mapbox_accesstoken=mapbox_token,
+        margin={"r":10,"t":30,"l":10,"b":10},
+        height=600,
+        title={
+            "text": "Densidade de Monitoramento (Transectos)",
+            "x": 0,
+            "xanchor": "left"
+        }
+    )
+    
+    return fig
+
+
+def build_monitoring_events_map_figure(events_df):
+    """
+    Build a map showing the number of monitoring events per locality.
+    Similar to DPUE map but showing event counts.
+    
+    Args:
+        events_df: DataFrame with locality_id, name, LATITUDE, LONGITUDE, event_count
+    """
+    if events_df.empty:
+        return go.Figure()
+    
+    service = CoralDataService()
+    localities = service.get_locality_data()
+    
+    # Merge event counts with full locality data
+    localities = localities[localities['locality_id'].isin(events_df['locality_id'])]
+    localities = localities.merge(events_df[['locality_id', 'event_count']], on='locality_id', how='left')
+    localities['event_count'] = localities['event_count'].fillna(0)
+    
+    event_min = localities['event_count'].min()
+    event_max = localities['event_count'].max()
+    
+    fig = go.Figure()
+    
+    for _, row in localities.iterrows():
+        try:
+            points = json.loads(row['coords_local'])
+            if points and isinstance(points, list) and isinstance(points[0], list):
+                lats, lons = zip(*points)
+                color = value_to_color(row['event_count'], event_min, event_max, 'plasma')
+                fig.add_trace(go.Scattermapbox(
+                    showlegend=False,
+                    lat=lats,
+                    lon=lons,
+                    mode="lines+markers",
+                    name="",
+                    line=dict(width=4, color=color),
+                    marker=dict(size=6, color=color),
+                    hoverinfo="text",
+                    text=f"{row['name']}<br>Eventos: {int(row['event_count'])}"
+                ))
+        except Exception as e:
+            print(f"Error plotting {row['name']}: {e}")
+            pass
+    
+    # Add colorbar
+    event_vals = localities['event_count'].dropna()
+    if not event_vals.empty:
+        fig.add_trace(go.Scattermapbox(
+            lat=[None], lon=[None],
+            mode="markers",
+            marker=dict(
+                size=0.1,
+                color=np.linspace(event_min, event_max, 10),
+                colorscale='plasma',
+                cmin=event_min,
+                cmax=event_max,
+                colorbar=dict(
+                    title="Eventos",
+                    thickness=25,
+                    y=0.5,
+                    x=1.02,
+                    xanchor="left",
+                    yanchor="middle",
+                    len=0.95
+                ),
+            ),
+            showlegend=False,
+            hoverinfo='none'
+        ))
+    
+    if not localities.empty:
+        mean_lat = localities['LATITUDE'].mean()
+        mean_lon = localities['LONGITUDE'].mean()
+    else:
+        mean_lat, mean_lon = -27, -48
+    
+    fig.update_layout(
+        template="plotly_dark",
+        mapbox_style="satellite-streets",
+        mapbox_accesstoken=mapbox_token,
+        mapbox_zoom=11,
+        mapbox_center={"lat": mean_lat, "lon": mean_lon},
+        margin={"r":10,"t":30,"l":10,"b":10},
+        height=600,
+        title={
+            "text": "Número de Eventos de Monitoramento por Localidade",
+            "x": 0,
+            "xanchor": "left"
+        }
+    )
+    
+    return fig
