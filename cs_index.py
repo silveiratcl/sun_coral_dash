@@ -8,7 +8,10 @@ from cs_map import (
     build_occurrence_map_figure,
     build_management_map_figure,
     build_days_since_management_map_figure,
-    build_days_since_monitoring_map_figure,  
+    build_days_since_monitoring_map_figure,
+    build_monitoring_density_map_figure,
+    build_monitoring_events_map_figure,
+    build_monitoring_line_density_map_figure,
 )    
 
 from cs_controllers import cs_controls, REBIO_LOCALITIES, REBIO_ENTORNO_LOCALITIES
@@ -24,7 +27,9 @@ from cs_histogram import (
     build_accumulated_mass_year_figure,
     build_days_since_management_bar_figure,  
     build_days_since_monitoring_bar_figure,
-    build_removal_ratio_year_figure
+    build_removal_ratio_year_figure,
+    build_monitoring_events_bar_figure,
+    build_monitoring_events_histogram_figure,
 ) 
 from cs_tables import build_occurrences_table
 from cs_methods import methods_layout  # Your text tab layout
@@ -301,6 +306,31 @@ def update_visuals(indicator, selected_localities, start_date, end_date):
         dafor_hist_style = style_hide
         dafor_sum_bar_style = style_hide
         removal_ratio_style = style_hide
+    
+    elif indicator == "monitoring_intensity":
+        # Get monitoring events data
+        events_df = service.get_monitoring_events_by_locality(start_date, end_date)
+        if selected_localities:
+            events_df = events_df[events_df['locality_id'].isin(selected_localities)]
+        
+        # Build visualizations with line-based density map
+        fig_map = build_monitoring_line_density_map_figure(service, start_date, end_date, selected_localities, None)
+        fig_bar = build_monitoring_events_bar_figure(events_df)
+        fig_hist = build_monitoring_events_histogram_figure(events_df)
+        
+        # Hide other charts
+        fig_dafor_hist = go.Figure()
+        fig_dafor_sum_bar = go.Figure()
+        fig_line = go.Figure()
+        fig_removal_ratio = go.Figure()
+        
+        hist_style = style_show
+        bar_style = style_show
+        dafor_hist_style = style_hide
+        dafor_sum_bar_style = style_hide
+        line_style = style_hide
+        removal_ratio_style = style_hide
+    
     else:
         hist_style = bar_style = dafor_hist_style = dafor_sum_bar_style = style_hide
 
@@ -316,10 +346,10 @@ def update_visuals(indicator, selected_localities, start_date, end_date):
 @app.callback(
     [Output("modal", "is_open"), Output("modal-body", "children")],
     [Input("cs-map-graph", "clickData"), Input("close-modal", "n_clicks")],
-    [State("modal", "is_open")],
+    [State("modal", "is_open"), State("indicator-dropdown", "value")],
 )
 
-def display_modal(clickData, n_close, is_open):
+def display_modal(clickData, n_close, is_open, current_indicator):
     ctx = dash.callback_context
     if not ctx.triggered:
         return is_open, no_update
@@ -327,6 +357,10 @@ def display_modal(clickData, n_close, is_open):
     trigger = ctx.triggered[0]["prop_id"].split(".")[0]
 
     if trigger == "cs-map-graph" and clickData:
+        # Only open modal if we're viewing occurrences
+        if current_indicator != "occurrences":
+            return False, no_update
+        
         point = clickData["points"][0]
         lat = point["lat"]
         lon = point["lon"]

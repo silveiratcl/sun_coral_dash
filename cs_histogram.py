@@ -382,3 +382,90 @@ def build_removal_ratio_year_figure(df_management):
         legend_title_text=None
     )
     return fig
+
+def build_monitoring_events_bar_figure(events_df):
+    """
+    Builds a horizontal bar chart showing the number of monitoring events per locality.
+    Similar to DPUE bar chart but showing event counts.
+    
+    Args:
+        events_df: DataFrame with locality_id, name, and event_count columns
+    """
+    if events_df.empty:
+        fig = go.Figure()
+        fig.update_layout(
+            template="plotly_dark",
+            xaxis_title="Número de Eventos",
+            yaxis_title="Localidade",
+            margin={"r":10,"t":20,"l":10,"b":40},
+            height=300
+        )
+        return fig
+    
+    # Sort by event count descending
+    df_sorted = events_df[events_df['event_count'] > 0].copy()
+    df_sorted = df_sorted.sort_values('event_count', ascending=False)
+    
+    y_col = "name" if "name" in df_sorted.columns else "locality_id"
+    df_sorted[y_col] = df_sorted[y_col].astype(str)
+    df_sorted[y_col] = pd.Categorical(df_sorted[y_col], categories=df_sorted[y_col], ordered=True)
+    
+    fig = px.bar(
+        df_sorted,
+        x="event_count",
+        y=y_col,
+        orientation="h",
+        template="plotly_dark",
+        labels={"event_count": "Número de Eventos", y_col: "Localidade"},
+        text=y_col,
+    )
+    
+    fig.update_traces(insidetextanchor='start')
+    fig.update_layout(
+        yaxis=dict(autorange="reversed", showticklabels=False),
+        yaxis_title=None,
+        xaxis_title="Número de Eventos de Monitoramento",
+        title={
+            "text": "Eventos de Monitoramento por Localidade",
+            "x": 0,
+            "xanchor": "left"
+        },
+        margin={"r":10,"t":35,"l":10,"b":40},
+        height=500
+    )
+    
+    return fig
+
+
+def build_monitoring_events_histogram_figure(events_df):
+    """
+    Builds a histogram showing the distribution of monitoring event counts.
+    
+    Args:
+        events_df: DataFrame with event_count column
+    """
+    if events_df.empty or events_df["event_count"].dropna().empty:
+        return go.Figure()
+    
+    fig = px.histogram(
+        events_df,
+        x="event_count",
+        title="Distribuição de Eventos de Monitoramento",
+        template="plotly_dark",
+        labels={"event_count": "Número de Eventos"}
+    )
+    
+    fig.update_layout(
+        bargap=0.1,
+        margin={"r":10,"t":35,"l":10,"b":40},
+        title={
+            "text": "Distribuição de Eventos de Monitoramento",
+            "x": 0,
+            "xanchor": "left"
+        },
+        height=180,
+        yaxis_title="Contagem",
+        xaxis_title="Número de Eventos"
+    )
+    
+    return fig

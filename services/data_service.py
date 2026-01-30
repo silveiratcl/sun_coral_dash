@@ -261,25 +261,77 @@ class CoralDataService:
     def get_transect_coordinates_for_density(self, start_date=None, end_date=None):
         """
         Extract all transect coordinates for kernel density estimation.
+        Interpolates points along line segments to create continuous coverage.
         Returns a DataFrame with individual coordinate points from all transects.
         """
         df_dafor = self.get_dafor_data(start_date, end_date)
         
-        # Parse coordinates and flatten to individual points
+        # Parse coordinates and interpolate along line segments
         points = []
         for _, row in df_dafor.iterrows():
             try:
                 coords = json.loads(row['dafor_coords'])
-                if coords and isinstance(coords, list):
-                    for coord in coords:
-                        if isinstance(coord, list) and len(coord) == 2:
-                            points.append({
-                                'latitude': coord[0],
-                                'longitude': coord[1],
-                                'locality_id': row['locality_id'],
-                                'date': row['date']
-                            })
+                if coords and isinstance(coords, list) and len(coords) >= 2:
+                    # Interpolate points along each line segment
+                    for i in range(len(coords) - 1):
+                        if isinstance(coords[i], list) and isinstance(coords[i+1], list):
+                            start_lat, start_lon = coords[i]
+                            end_lat, end_lon = coords[i+1]
+                            
+                            # Calculate distance between points
+                            try:
+                                distance_m = geodesic((start_lat, start_lon), (end_lat, end_lon)).meters
+                                
+                                # Create interpolated points every 5 meters along the segment
+                                num_points = max(2, int(distance_m / 5))
+                                
+                                for j in range(num_points):
+                                    fraction = j / (num_points - 1) if num_points > 1 else 0
+                                    interp_lat = start_lat + (end_lat - start_lat) * fraction
+                                    interp_lon = start_lon + (end_lon - start_lon) * fraction
+                                    
+                                    points.append({
+                                        'latitude': interp_lat,
+                                        'longitude': interp_lon,
+                                        'locality_id': row['locality_id'],
+                                        'date': row['date']
+                                    })
+                            except Exception:
+                                # If distance calculation fails, just use endpoints
+                                points.append({
+                                    'latitude': start_lat,
+                                    'longitude': start_lon,
+                                    'locality_id': row['locality_id'],
+                                    'date': row['date']
+                                })
+                                points.append({
+                                    'latitude': end_lat,
+                                    'longitude': end_lon,
+                                    'locality_id': row['locality_id'],
+                                    'date': row['date']
+                                })
             except Exception:
                 continue
         
         return pd.DataFrame(points)
+    def get_transect_lines_for_density(self, start_date=None, end_date=None):
+        """
+        Extract transect lines (not interpolated points) for line-based density visualization.
+        Returns a list of transect line coordinates.
+        """
+        df_dafor = self.get_dafor_data(start_date, end_date)
+        
+        transect_lines = []
+        for _, row in df_dafor.iterrows():
+            try:
+                coords = json.loads(row['dafor_coords'])
+                if coords and isinstance(coords, list) and len(coords) >= 2:
+                    transect_lines.append({
+                        'coords': coords,
+                        'locality_id': row['locality_id'],
+                        'date': row['date']
+                    })
+            except Exception:
+                continue
+        
+        return transect_lines

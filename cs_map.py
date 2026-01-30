@@ -684,8 +684,8 @@ def build_days_since_monitoring_map_figure(df_days_since):
 
 def build_monitoring_density_map_figure(points_df):
     """
-    Build a kernel density map showing monitoring intensity using a 10x10 meter grid.
-    Uses Plotly's density_mapbox for visualization.
+    Build a density map showing the count of overlapping transects.
+    Shows actual number of transects at each location rather than normalized density.
     
     Args:
         points_df: DataFrame with 'latitude' and 'longitude' columns
@@ -696,6 +696,10 @@ def build_monitoring_density_map_figure(points_df):
     # Use Plotly's built-in density mapping
     import plotly.express as px
     
+    # Add weight column - each point represents part of a transect
+    # Count how many transects pass through each area
+    points_df['count'] = 1
+    
     # Calculate center for map
     mean_lat = points_df['latitude'].mean()
     mean_lon = points_df['longitude'].mean()
@@ -704,22 +708,24 @@ def build_monitoring_density_map_figure(points_df):
         points_df, 
         lat='latitude', 
         lon='longitude',
-        radius=10,  # 10 meter radius for kernel density
+        z='count',  # Use count to show actual transect density
+        radius=30,  # 30 meter radius for smoothing
         center=dict(lat=mean_lat, lon=mean_lon),
         zoom=12,
         mapbox_style="satellite-streets",
+        color_continuous_scale='Hot',  # Better color scale for count data
     )
     
     fig.update_layout(
         template="plotly_dark",
         mapbox_accesstoken=mapbox_token,
-        margin={"r":10,"t":30,"l":10,"b":10},
+        margin={"r":10,"t":10,"l":10,"b":10},
         height=600,
-        title={
-            "text": "Densidade de Monitoramento (Transectos)",
-            "x": 0,
-            "xanchor": "left"
-        }
+        coloraxis_colorbar=dict(
+            title="Nº Transectos",
+            thickness=25,
+            len=0.7,
+        )
     )
     
     return fig
@@ -815,6 +821,72 @@ def build_monitoring_events_map_figure(events_df):
             "x": 0,
             "xanchor": "left"
         }
+    )
+    
+    return fig
+
+def build_monitoring_line_density_map_figure(data_service, start_date, end_date, selected_localities, locality_filter):
+    """
+    Build a map figure showing transects as semi-transparent lines.
+    Overlapping lines show density through visual accumulation.
+    """
+    transect_lines = data_service.get_transect_lines_for_density(start_date, end_date)
+    
+    # Apply locality filter
+    if selected_localities and selected_localities != [0]:
+        transect_lines = [t for t in transect_lines if t['locality_id'] in selected_localities]
+    
+    if not transect_lines:
+        fig = go.Figure()
+        fig.update_layout(
+            title="Sem dados de transectos para o período selecionado",
+            height=600
+        )
+        return fig
+    
+    # Create figure
+    fig = go.Figure()
+    
+    # Draw each transect as a semi-transparent line
+    for transect in transect_lines:
+        coords = transect['coords']
+        if len(coords) >= 2:
+            lats = [c[0] for c in coords]
+            lons = [c[1] for c in coords]
+            
+            fig.add_trace(go.Scattermapbox(
+                lat=lats,
+                lon=lons,
+                mode='lines',
+                line=dict(width=4, color='rgba(255, 100, 0, 0.4)'),  # Orange with 40% opacity
+                showlegend=False,
+                hoverinfo='skip'
+            ))
+    
+    # Calculate center for map
+    all_lats = []
+    all_lons = []
+    for t in transect_lines:
+        for c in t['coords']:
+            all_lats.append(c[0])
+            all_lons.append(c[1])
+    
+    center_lat = sum(all_lats) / len(all_lats)
+    center_lon = sum(all_lons) / len(all_lons)
+    
+    # Configure map layout
+    with open('keys/mapbox_key', 'r') as f:
+        mapbox_token = f.read().strip()
+    
+    fig.update_layout(
+        mapbox=dict(
+            accesstoken=mapbox_token,
+            center=dict(lat=center_lat, lon=center_lon),
+            zoom=11,
+            style='satellite-streets'
+        ),
+        height=600,
+        margin=dict(l=0, r=0, t=0, b=0)
     )
     
     return fig
