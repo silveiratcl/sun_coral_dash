@@ -95,7 +95,7 @@ cs_controls = dbc.Row([
             {"label": "MASSA MANEJADA (KG)", "value": "management"},
             {"label": "ÚLTIMO MANEJO (DIAS)", "value": "days_since_management"},
             {"label": "ÚLTIMO MONITORAMENTO (DIAS)", "value": "days_since_monitoring"},
-            {"label": "INTENSIDADE DE MONITORAMENTO", "value": "monitoring_intensity"},
+            {"label": "NÚMERO DE MONITORAMENTOS", "value": "monitoring_intensity"},
         ],
         value="dpue",
         placeholder="Select Indicator"
