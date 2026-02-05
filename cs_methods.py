@@ -336,6 +336,18 @@ html.Ul([
             html.H3("Último monitoramento (dias)"),
             "Este indicador mostra o número de dias desde o último monitoramento realizado em cada localidade. Ele é útil para garantir que as áreas sejam monitoradas regularmente."
         ]),
+
+        html.Br(),
+        html.Li([
+            html.H3("Número de monitoramentos por localidade"),
+            "Este indicador mostra o número de monitoramentos realizados em cada localidade. Ele é útil para avaliar o esforço de monitoramento e identificar áreas que podem necessitar de maior atenção."
+        ]),
+
+
+
+
+
+
     ]),
     html.Br(),
 
