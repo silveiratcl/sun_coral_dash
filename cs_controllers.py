@@ -28,6 +28,7 @@ REBIO_LOCALITIES = [
     name_to_id.get("Saco da Mulata Norte"),
     name_to_id.get("Saco da Mulata Sul"), 
     name_to_id.get("Toca da Salema"),# missing costao do saco dagua e saquinho dágua
+   
 ]
 REBIO_LOCALITIES = [id for id in REBIO_LOCALITIES if id is not None]
 print("REBIO_LOCALITIES:", REBIO_LOCALITIES)
@@ -40,6 +41,7 @@ ENTORNO_LOCALITIES = [
     name_to_id.get("Baía do Engenho"),
     name_to_id.get("Baía do Farol"),
     name_to_id.get("Saco do Vidal"),
+     name_to_id.get("Ponta Queimada"),  # Add new locality entorno imediato
 ]
 ENTORNO_LOCALITIES = [id for id in ENTORNO_LOCALITIES if id is not None]
 print("ENTORNO_LOCALITIES:", ENTORNO_LOCALITIES)
