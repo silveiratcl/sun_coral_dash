@@ -19,10 +19,12 @@ methods_layout = html.Div([
     html.Br(),
     html.Br(),
     html.H3("""
-            Um dashboard de dados é uma ferramenta que permite aos usuários visualizar e compreender dados complexos de forma simples.
-            Ao atuar como uma centralização de dados processados, ele pode apresentar métricas essenciais e tendências em um formato visualmente intuitivo. 
-            Isso o torna uma solução ideal para agências ambientais que buscam adquirir elementos para a Detecção Precoce - Resposta Rápida (DPRR) de espécies invasoras.
-            Nesta documentação exploraremos os componentes fundamentais para interpretação dos dados no Dashboard de Monitoramento e Manejo do Coral-Sol - *PACS REBIO Arvoredo.
+            Um dashboard de dados é uma ferramenta que visa ajudar usuários/gestores a visualizar e compreender dados complexos. 
+            Ao atuar como uma centralização dos dados processados coletados em campo, ele pode apresentar métricas essenciais e tendências em um 
+            formato visualmente intuitivo. Isso o torna uma solução ideal para órgãos ambientais que buscam adquirir elementos para a 
+            Detecção Precoce - Resposta Rápida e continuamente adaptar estratégias de manejo de espécies invasoras com base em dados.
+            Nesta documentação exploraremos os componentes fundamentais de desenvolvimento e interpretação dos dados no Dashboard de Monitoramento e Manejo do Coral-Sol - *PACS REBIO Arvoredo.
+
     """),
 
     html.Br(), 
@@ -48,7 +50,7 @@ methods_layout = html.Div([
     html.Br(),
     html.H3("""
         Os dados de monitoramento são obtidos em localidades, onde é definido um segmento, e 
-        na extensão de um segmento são coletadas informações relacionadas a transectos visuais de um minuto cada. 
+        na extensão de um segmento são coletadas informações relacionadas a transectos visuais minuto a minuto de busca ativa. 
 
     """),
     html.Br(),
@@ -83,7 +85,7 @@ methods_layout = html.Div([
     """),
     html.Br(),
     html.H3("""
-            Na faixa de profundidade de zero a 2 metros do segmento de amostragem, o monitoramento será realizado por um mergulhador 
+            Na faixa de profundidade de zero a 2 metros do segmento de amostragem, o monitoramento e realizado por uma dupla de mergulhadores 
             em snorkeling. O mergulhador fará uma busca ativa dentro dessa faixa de profundidade, procurando possíveis ocorrências de 
             coral-sol ao longo de toda a extensão do segmento de amostragem. 
     """),
@@ -93,7 +95,7 @@ methods_layout = html.Div([
     """),
     html.Br(),
     html.H3("""
-            As amostragens com mergulho autônomo serão conduzidas por dois pares de mergulhadores. A área operacional para cada par será 
+            As amostragens com mergulho autônomo são conduzidas por duas duplas. A área operacional para cada dupla e  
             determinada por faixas de profundidade (por exemplo, de 2 a 8m e de 9 a 15m) ao longo do segmento de amostragem, visando cobrir 
             a maior extensão vertical possível. A divisão das profundidades de varredura entre os pares pode variar dependendo das características 
             batimétricas de cada segmento de amostragem.
@@ -131,7 +133,8 @@ methods_layout = html.Div([
 
     html.H3("""
            Para classificar os níveis de invasão nos segmentos amostrados, utilizamos uma escala semi-quantitativa de abundância conhecida como escala DAFOR (Sutherland, 2006), 
-            especificamente adaptada para avaliar a abundância de coral-sol (Creed & Fleury, 2009). A cada transecto de 1min é atribuída uma categoria  de abundância relativa, que são descritas da seguinte forma:
+            especificamente adaptada para avaliar a abundância de coral-sol (Creed & Fleury, 2009). A cada transecto de 1 minuto é atribuída uma categoria  de abundância relativa, 
+            que são descritas da seguinte forma:
            """),
     html.Br(),
     html.Ul([
@@ -179,9 +182,9 @@ methods_layout = html.Div([
     html.Br(),
 
     html.H3("""
-            As observações feitas na escala DAFOR são então convertidas para um índice de abundância relativa (RAI) usando a seguinte classificação: 
-           10 - dominante, 8 - abundante, 6 - frequente, 4 - ocasional, 2 - raro; zero - ausente. A ilustração abaixo ilustra as categorias da escala DAFOR
-              e seus respectivos valores de RAI.
+            As observações realizadas na escala DAFOR são então convertidas para um índice de abundância relativa (IAR) usando a seguinte classificação: 
+           10 - dominante, 8 - abundante, 6 - frequente, 4 - ocasional, 2 - raro; zero - ausente. A ilustração abaixo mostra as categorias da escala DAFOR
+              e seus respectivos valores de IAR.
         
            """),
     html.Figure([
@@ -285,28 +288,30 @@ html.Ul([
     html.Br(),
 
     html.H3("""
-           Alguns indicadores foram desenvolvidos para avaliação das das ações de monitoramento e manejo da invasão do coral-sol na 
+           Alguns indicadores foram desenvolvidos para avaliação das ações de monitoramento e manejo da invasão do coral-sol na 
             REBIO Arvoredo e entorno Abaixo exploramos cada um dos indicadores desenvolvidos:
 
            """),
     html.Br(),
     html.Ul([
         html.Li([
-            html.H3("Detecçoes por Unidade de Esforço (DPUE)"),
-            "Este indicador é calculado dividindo o número total de detecções de coral-sol pelo esforço total de amostragem, medido em minutos e unidades de tamanho da localidade. O DPUE fornece uma medida padronizada da frequência de detecção do coral-sol ao longo do tempo, permitindo a comparação entre diferentes períodos e locais de amostragem."
+            html.H3("Detecções por Unidade de Esforço (DPUE)"),
+            "Este indicador é calculado dividindo o número total de detecções de coral-sol pelo esforço total de amostragem, medido em minutos e unidades de tamanho da localidade. "
+            "A DPUE fornece uma medida padronizada da frequência de detecção do coral-sol ao longo do tempo, permitindo a comparação entre diferentes períodos e locais de amostragem."
         ]),
         html.Br(),
         html.Li([
             html.H3("Indice de Abundância Relativa (IAR-DAFOR)"),
-            " Este indicador é derivado da escala DAFOR, que classifica a abundância do coral-sol em categorias qualitativas (Dominante, Abundante, Frequente, Ocasional, Raro, Ausente).  "
-            " Para cada categoria é atribuída a um valor numérico específico. Nos gráficos, o IAR-DAFOR é representado pela soma dos valores de IAR (Índice de Abundância Relativa) por localidade. Também é possível observar a distribuição das categorias DAFOR por uma ou mais localidades." 
+            "Este indicador é derivado da escala DAFOR, que classifica a abundância do coral-sol em categorias qualitativas (Dominante, Abundante, Frequente, Ocasional, Raro, Ausente)."
+            "Para cada categoria é atribuída a um valor numérico específico. Nos gráficos, o IAR-DAFOR é representado pela soma dos valores de IAR (Índice de Abundância Relativa) por localidade. "
+            "Também é possível observar a distribuição das categorias DAFOR por uma ou mais localidades." 
         ]),
         html.Br(),
         html.Li([
             html.H3("Ocorrências"),
             "Este indicador apresenta no mapa as ocorrências de coral-sol por localidade, permitindo a visualização espacial da distribuição "
             "da espécie invasora e informações locais como a localidade, data, profundidade, acesso (acessível, parcialmente acessível, inacessível)"
-            " e o tipo da geomorfologia em que a ocorrência foi registrada (toca ou Caverna, lage, matacão ou paredão ou rochas médias e pequenas)"
+            "e o tipo da geomorfologia em que a ocorrência foi registrada (toca ou Caverna, lage, matacão ou paredão ou rochas médias e pequenas)"
         ]),
          html.Figure([
     html.Img(src="assets/img/occ_pic.png", 
@@ -323,8 +328,8 @@ html.Ul([
 ]),
         html.Br(),
         html.Li([
-            html.H3("Massa manejada"),
-            "Este indicador representa a quantidade total de coral-sol manejada por localidade ao longo do tempo. A massa manejada é uma medida importante para avaliar a eficácia das ações de controle e manejo da espécie invasora."
+            html.H3("Massa manejada (Kg)"),
+            "Este indicador representa a quantidade total de coral-sol manejada por localidade ao longo do tempo. A massa manejada (Kg) é uma medida importante para avaliar a eficácia das ações de controle e manejo da espécie invasora."
         ]),
         html.Br(),
         html.Li([
@@ -362,6 +367,7 @@ html.Ul([
     html.Br(),
 
     html.Ul([
+        html.Li("Coelho-Souza, S. A. et al. (2025). A “short blanked” reality: The challenge to control sun coral invasion in a large no-take marine protected area over a decade of adaptive management. Marine Pollution Bulletin, 216, 117947. https://doi.org/10.1016/j.marpolbul.2025.117947"),
         html.Li("CREED, J. C. et al. 2025. A Bioinvasão do Coral-Sol. Zenodo. https://doi.org/10.5281/zenodo.16882236"),
         html.Li("CREED, J.C.; FLEURY, B.G. 2009. Monitoramento extensivo de coral-sol (Tubastraea coccinea e T. tagusensis): protocolo de semi-quantificação. Projeto Coral-Sol, Instituto Biodiversidade Marinha, Rio de Janeiro. p 1."),
         html.Li("CREED, J.C. et al. 2017. The Sun-Coral Project: the first social-environmental initiative to manage the biological invasion of Tubastraea spp. in Brazil. Management of Biological Invasions 8(2): 181."),
