@@ -23,6 +23,68 @@ def get_mapbox_token():
 
 mapbox_token = get_mapbox_token()
 
+# Load REBIO boundary shapefile
+def load_rebio_boundary():
+    """Load REBIO Arvoredo boundary from shapefile and return coordinates."""
+    import geopandas as gpd
+    
+    shapefile_path = os.path.join(os.path.dirname(__file__), 'assets', 'shp', 'limite_rebio.shp')
+    try:
+        gdf = gpd.read_file(shapefile_path)
+        
+        # Convert to WGS84 if needed
+        if gdf.crs and gdf.crs != 'EPSG:4326':
+            gdf = gdf.to_crs('EPSG:4326')
+        
+        # Extract coordinates from geometry (supports Polygon, LineString, and Multi* variants)
+        coords = []
+        for geom in gdf.geometry:
+            if geom.geom_type == 'Polygon':
+                coords.extend(list(geom.exterior.coords))
+            elif geom.geom_type == 'MultiPolygon':
+                for poly in geom.geoms:
+                    coords.extend(list(poly.exterior.coords))
+            elif geom.geom_type == 'LineString':
+                coords.extend(list(geom.coords))
+            elif geom.geom_type == 'MultiLineString':
+                for line in geom.geoms:
+                    coords.extend(list(line.coords))
+        
+        return coords if coords else None
+    except Exception as e:
+        print(f"Warning: Could not load REBIO boundary: {e}")
+        return None
+
+# Cache the boundary coordinates
+_rebio_boundary_coords = None
+
+def get_rebio_boundary():
+    """Get cached REBIO boundary coordinates."""
+    global _rebio_boundary_coords
+    if _rebio_boundary_coords is None:
+        _rebio_boundary_coords = load_rebio_boundary()
+    return _rebio_boundary_coords
+
+def add_rebio_boundary_to_map(fig):
+    """Add REBIO Arvoredo boundary to a Plotly mapbox figure on top of other traces."""
+    coords = get_rebio_boundary()
+    if coords:
+        # Extract lats and lons (coords are in lon, lat order from shapefile)
+        lons = [c[0] for c in coords]
+        lats = [c[1] for c in coords]
+        
+        # Add boundary line as last trace so it appears on top
+        fig.add_trace(go.Scattermapbox(
+            lat=lats,
+            lon=lons,
+            mode="lines",
+            line=dict(width=3, color="rgba(255, 255, 0, 0.9)"),  # Bright yellow boundary
+            name="Limite REBIO Arvoredo",
+            showlegend=True,
+            hoverinfo="name"
+        ))
+    return fig
+
 def value_to_color(val, vmin, vmax, cmap_name='viridis'):
     norm = (val - vmin) / (vmax - vmin) if vmax > vmin else 0
     cmap = matplotlib.cm.get_cmap(cmap_name)
@@ -30,7 +92,7 @@ def value_to_color(val, vmin, vmax, cmap_name='viridis'):
     return matplotlib.colors.rgb2hex(rgba)
 
 
-def build_map_figure(dpue_df): # DPUE valuess
+def build_map_figure(dpue_df, show_boundary=True): # DPUE valuess
     """
     Builds a map figure for DPUE values using Plotly."""
     
@@ -115,9 +177,11 @@ def build_map_figure(dpue_df): # DPUE valuess
         margin={"r":10,"t":30,"l":10,"b":10},
         height=600
     )
+    if show_boundary:
+        add_rebio_boundary_to_map(fig)
     return fig
 
-def build_raiw_map_figure(raiw_df):
+def build_raiw_map_figure(raiw_df, show_boundary=True):
     """
     Builds a map figure for RAI-W (Relative Abundance Index - Weighted) values using Plotly.
     """
@@ -201,9 +265,11 @@ def build_raiw_map_figure(raiw_df):
         margin={"r":10,"t":30,"l":10,"b":10},
         height=600
     )
+    if show_boundary:
+        add_rebio_boundary_to_map(fig)
     return fig
 
-def build_dafor_spatial_map_figure(segments_df):
+def build_dafor_spatial_map_figure(segments_df, show_boundary=True):
     """
     Builds a spatial heat map showing DAFOR scores along locality boundaries.
     Each 100m segment is colored by averaged DAFOR scores from overlapping monitoring.
@@ -226,6 +292,8 @@ def build_dafor_spatial_map_figure(segments_df):
             height=600,
             title="Sem dados para exibir"
         )
+        if show_boundary:
+            add_rebio_boundary_to_map(fig)
         return fig
     
     # Define DAFOR color scale
@@ -306,9 +374,11 @@ def build_dafor_spatial_map_figure(segments_df):
         margin={"r":10,"t":30,"l":10,"b":10},
         height=600
     )
+    if show_boundary:
+        add_rebio_boundary_to_map(fig)
     return fig
 
-def build_dafor_sum_map_figure(df_dafor_sum):
+def build_dafor_sum_map_figure(df_dafor_sum, show_boundary=True):
     """
     Builds a map figure for DAFOR sum values using Plotly."""
 
@@ -388,9 +458,11 @@ def build_dafor_sum_map_figure(df_dafor_sum):
         margin={"r":10,"t":30,"l":10,"b":10},
         height=600
     )
+    if show_boundary:
+        add_rebio_boundary_to_map(fig)
     return fig
     
-def build_occurrence_map_figure(occurrences_df):
+def build_occurrence_map_figure(occurrences_df, show_boundary=True):
     """ Builds a map figure for occurrences using Plotly."""
    
     def parse_coords(coord):
@@ -452,6 +524,8 @@ def build_occurrence_map_figure(occurrences_df):
         margin={"r":10,"t":30,"l":10,"b":10},
         height=600
     )
+    if show_boundary:
+        add_rebio_boundary_to_map(fig)
     return fig
 
 def parse_coords(coord_str):
@@ -468,7 +542,7 @@ def parse_coords(coord_str):
 ###########################
 
 
-def build_dafor_sum_map_figure(df_dafor_sum):
+def build_dafor_sum_map_figure(df_dafor_sum, show_boundary=True):
     """
     Builds a map figure for DAFOR sum values using Plotly."""
 
@@ -548,10 +622,12 @@ def build_dafor_sum_map_figure(df_dafor_sum):
         margin={"r":10,"t":30,"l":10,"b":10},
         height=600
     )
+    if show_boundary:
+        add_rebio_boundary_to_map(fig)
     return fig
 
 
-def build_management_map_figure(df_management):
+def build_management_map_figure(df_management, show_boundary=True):
     """Builds a map figure for management data using Plotly."""
 
     service = CoralDataService()
@@ -646,11 +722,13 @@ def build_management_map_figure(df_management):
         margin={"r":10,"t":30,"l":10,"b":10},
         height=600
     )
+    if show_boundary:
+        add_rebio_boundary_to_map(fig)
     return fig
 
 import plotly.graph_objects as go
 
-def build_days_since_management_map_figure(df_days_since):
+def build_days_since_management_map_figure(df_days_since, show_boundary=True):
     """
     Builds a map with localities colored by days since last management.
     Only lines are shown, colored by days_since (Viridis palette).
@@ -732,9 +810,11 @@ def build_days_since_management_map_figure(df_days_since):
         margin={"r":10,"t":30,"l":10,"b":10},
         height=600
     )
+    if show_boundary:
+        add_rebio_boundary_to_map(fig)
     return fig
 
-def build_days_since_monitoring_map_figure(df_days_since):
+def build_days_since_monitoring_map_figure(df_days_since, show_boundary=True):
     """
     Builds a map with localities colored by days since last monitoring.
     Only lines are shown, colored by days_since (Viridis palette).
@@ -817,6 +897,8 @@ def build_days_since_monitoring_map_figure(df_days_since):
         margin={"r":10,"t":30,"l":10,"b":10},
         height=600
     )
+    if show_boundary:
+        add_rebio_boundary_to_map(fig)
     return fig
 
 ############## heatmap for management transects. just for reference, not used in the app
@@ -884,13 +966,14 @@ def build_days_since_monitoring_map_figure(df_days_since):
 #############################
 
 
-def build_monitoring_density_map_figure(points_df):
+def build_monitoring_density_map_figure(points_df, show_boundary=True):
     """
     Build a density map showing the count of overlapping transects.
     Shows actual number of transects at each location rather than normalized density.
     
     Args:
         points_df: DataFrame with 'latitude' and 'longitude' columns
+        show_boundary: Boolean to show/hide REBIO boundary
     """
     if points_df.empty:
         return go.Figure()
@@ -930,10 +1013,12 @@ def build_monitoring_density_map_figure(points_df):
         )
     )
     
+    if show_boundary:
+        add_rebio_boundary_to_map(fig)
     return fig
 
 
-def build_monitoring_events_map_figure(events_df):
+def build_monitoring_events_map_figure(events_df, show_boundary=True):
     """
     Build a map showing the number of monitoring events per locality.
     Similar to DPUE map but showing event counts.
@@ -1025,9 +1110,11 @@ def build_monitoring_events_map_figure(events_df):
         }
     )
     
+    if show_boundary:
+        add_rebio_boundary_to_map(fig)
     return fig
 
-def build_monitoring_line_density_map_figure(data_service, start_date, end_date, selected_localities, locality_filter):
+def build_monitoring_line_density_map_figure(data_service, start_date, end_date, selected_localities, locality_filter, show_boundary=True):
     """
     Build a map figure showing transects as semi-transparent lines.
     Overlapping lines show density through visual accumulation.
@@ -1044,6 +1131,8 @@ def build_monitoring_line_density_map_figure(data_service, start_date, end_date,
             title="Sem dados de transectos para o período selecionado",
             height=600
         )
+        if show_boundary:
+            add_rebio_boundary_to_map(fig)
         return fig
     
     # Create figure
@@ -1091,4 +1180,6 @@ def build_monitoring_line_density_map_figure(data_service, start_date, end_date,
         margin=dict(l=0, r=0, t=0, b=0)
     )
     
+    if show_boundary:
+        add_rebio_boundary_to_map(fig)
     return fig

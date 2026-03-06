@@ -290,7 +290,7 @@ html.Ul([
     html.H3("""
              
             Alguns indicadores foram desenvolvidos para avaliação das ações de monitoramento e manejo da invasão do coral-sol na 
-            REBIO Arvoredo e entorno. Os idicadore são calculados e apresentados condicionados aos filtros de período e localidade selecionados no dashboard.
+            REBIO Arvoredo e entorno. Os indicadores são calculados e apresentados condicionados aos filtros de período e localidade selecionados no dashboard.
             Abaixo exploramos cada um dos indicadores desenvolvidos:
 
            """),
@@ -303,7 +303,7 @@ html.Ul([
         ]),
         html.Br(),
         html.Li([
-            html.H3("Indice de Abundância Relativa (IAR-DAFOR)"),
+            html.H3("Índice de Abundância Relativa (IAR-DAFOR)"),
             "Este indicador é derivado da escala DAFOR, que classifica a abundância do coral-sol em categorias qualitativas (Dominante, Abundante, Frequente, Ocasional, Raro, Ausente)."
             "Para cada categoria é atribuída a um valor numérico específico. Nos gráficos, o IAR-DAFOR é representado pela soma dos valores de IAR (Índice de Abundância Relativa) por localidade. "
             "Também é possível observar a distribuição das categorias DAFOR por uma ou mais localidades." 

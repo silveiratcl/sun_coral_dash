@@ -132,6 +132,15 @@ cs_controls = dbc.Row([
         value="dpue",
         placeholder="Select Indicator"
     ),
+    html.H3("""Opções de Visualização""", style={"margin-top": "30px", "margin-bottom": "10px"}),
+    dcc.Checklist(
+        id="boundary-toggle",
+        options=[
+            {"label": " Mostrar limite da REBIO Arvoredo", "value": "show_boundary"}
+        ],
+        value=[],  # Empty by default (boundary hidden)
+        style={"margin-bottom": "20px"}
+    ),
 ])
 
 def filter_localities(selected_localities, df):

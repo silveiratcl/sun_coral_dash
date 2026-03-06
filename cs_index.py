@@ -38,6 +38,7 @@ from cs_histogram import (
 ) 
 from cs_tables import build_occurrences_table
 from cs_methods import methods_layout  # Your text tab layout
+from cs_report import get_report_layout  # Real-time report tab
 from services.data_service import CoralDataService
 #from cs_methods import methods_layout
 from dash import ctx
@@ -84,6 +85,8 @@ modal = dbc.Modal(
 
 
 
+# OLD LAYOUT - Commented out, the active layout is below at line ~502
+"""
 app.layout = dbc.Container(
     [
         dbc.Row([
@@ -101,6 +104,7 @@ app.layout = dbc.Container(
     value="dashboard",  # default tab
     children=[
         dcc.Tab(label='Dashboard', value="dashboard", children=[dashboard_layout]),
+        dcc.Tab(label='Relatório em Tempo Real', value="report", children=[html.Div("Test report content")]),
         dcc.Tab(label='Métodos e Texto', value="methods", children=[methods_layout]),
     ]
 )
@@ -111,6 +115,7 @@ app.layout = dbc.Container(
     ],
     fluid=True,
 )
+"""
 
 
 #=========================================
@@ -150,11 +155,15 @@ def toggle_date_picker(time_range):
         Input("time-range-dropdown", "value"),
         Input("date-range", "start_date"),
         Input("date-range", "end_date"),
+        Input("boundary-toggle", "value"),
     ]
 )
 
-def update_visuals(indicator, selected_localities, time_range, custom_start_date, custom_end_date):
+def update_visuals(indicator, selected_localities, time_range, custom_start_date, custom_end_date, boundary_toggle):
     service = CoralDataService()
+    
+    # Convert boundary toggle from list to boolean
+    show_boundary = "show_boundary" in (boundary_toggle or [])
     
     # Calculate dates based on time range selection
     if time_range == "all":
@@ -219,7 +228,7 @@ def update_visuals(indicator, selected_localities, time_range, custom_start_date
         dpue_df = service.get_dpue_by_locality(start_date, end_date)
         if selected_localities:
             dpue_df = dpue_df[dpue_df['locality_id'].isin(selected_localities)]
-        fig_map = build_map_figure(dpue_df)
+        fig_map = build_map_figure(dpue_df, show_boundary)
         fig_hist = build_histogram_figure(dpue_df)
         fig_bar = build_locality_bar_figure(dpue_df)
         # DAFOR charts remain empty
@@ -235,7 +244,7 @@ def update_visuals(indicator, selected_localities, time_range, custom_start_date
         df_dafor_sum = service.get_sum_of_dafor_by_locality(start_date, end_date)
         if selected_localities:
             df_dafor_sum = df_dafor_sum[df_dafor_sum['locality_id'].isin(selected_localities)]
-        fig_map = build_dafor_sum_map_figure(df_dafor_sum)
+        fig_map = build_dafor_sum_map_figure(df_dafor_sum, show_boundary)
 
         # Get all DAFOR values (for histogram)
         dafor_df = service.get_dafor_data(start_date, end_date)
@@ -268,7 +277,7 @@ def update_visuals(indicator, selected_localities, time_range, custom_start_date
             raiw_df = raiw_df[raiw_df['locality_id'].isin(selected_localities)]
         
         # Build visualizations
-        fig_map = build_raiw_map_figure(raiw_df)
+        fig_map = build_raiw_map_figure(raiw_df, show_boundary)
         fig_hist = build_raiw_histogram_figure(raiw_df)
         fig_bar = build_raiw_bar_figure(raiw_df)
         
@@ -286,7 +295,7 @@ def update_visuals(indicator, selected_localities, time_range, custom_start_date
             segments_df = segments_df[segments_df['locality_id'].isin(selected_localities)]
         
         # Build spatial heat map
-        fig_map = build_dafor_spatial_map_figure(segments_df)
+        fig_map = build_dafor_spatial_map_figure(segments_df, show_boundary)
         
         # Hide all charts - only show map for spatial visualization
         fig_hist = go.Figure()
@@ -320,7 +329,7 @@ def update_visuals(indicator, selected_localities, time_range, custom_start_date
             "geomorphology": "Geomorfologia"
         })
 
-        fig_map = build_occurrence_map_figure(map_df)
+        fig_map = build_occurrence_map_figure(map_df, show_boundary)
         occurrences_table = build_occurrences_table(table_df)
         # Hide other charts
         fig_hist = go.Figure()
@@ -338,7 +347,7 @@ def update_visuals(indicator, selected_localities, time_range, custom_start_date
         df_management = df_management.merge(localities, on='locality_id', how='left')
         df_management['year'] = pd.to_datetime(df_management['date']).dt.year
 
-        fig_map = build_management_map_figure(df_management)
+        fig_map = build_management_map_figure(df_management, show_boundary)
         fig_line = build_accumulated_mass_year_figure(df_management)
         fig_removal_ratio = build_removal_ratio_year_figure(df_management)  # <-- Add this line
         line_style = style_show
@@ -352,7 +361,7 @@ def update_visuals(indicator, selected_localities, time_range, custom_start_date
         print("Rows for chart:", len(df_days_since))
         if selected_localities:
             df_days_since = df_days_since[df_days_since['locality_id'].isin(selected_localities)]
-        fig_map = build_days_since_management_map_figure(df_days_since)
+        fig_map = build_days_since_management_map_figure(df_days_since, show_boundary)
         fig_bar = build_days_since_management_bar_figure(df_days_since)
         # Hide other charts, show map and bar
         fig_hist = go.Figure()
@@ -376,7 +385,7 @@ def update_visuals(indicator, selected_localities, time_range, custom_start_date
             print("Selected localities:", selected_localities)
             print("Filtered locality_ids:", df_days_since["locality_id"].unique())
             print("Filtered rows:", len(df_days_since))
-        fig_map = build_days_since_monitoring_map_figure(df_days_since)
+        fig_map = build_days_since_monitoring_map_figure(df_days_since, show_boundary)
         fig_bar = build_days_since_monitoring_bar_figure(df_days_since)  # <-- bar plot below map
         fig_hist = go.Figure()
         fig_dafor_hist = go.Figure()
@@ -395,7 +404,7 @@ def update_visuals(indicator, selected_localities, time_range, custom_start_date
             events_df = events_df[events_df['locality_id'].isin(selected_localities)]
         
         # Build visualizations with line-based density map
-        fig_map = build_monitoring_line_density_map_figure(service, start_date, end_date, selected_localities, None)
+        fig_map = build_monitoring_line_density_map_figure(service, start_date, end_date, selected_localities, None, show_boundary)
         fig_bar = build_monitoring_events_bar_figure(events_df)
         fig_hist = build_monitoring_events_histogram_figure(events_df)
         
@@ -510,6 +519,7 @@ app.layout = dbc.Container(
     value="dashboard",  # default tab
     children=[
         dcc.Tab(label='Dashboard', value="dashboard", children=[dashboard_layout]),
+        dcc.Tab(label='Relatório em Tempo Real', value="report", children=[get_report_layout()]),
         dcc.Tab(label='Sobre', value="methods", children=[methods_layout]),
     ]
 )
@@ -530,17 +540,39 @@ app.layout = dbc.Container(
     [
         Input("indicator-dropdown", "value"),
         Input("locality-dropdown", "value"),
+        Input("time-range-dropdown", "value"),
         Input("date-range", "start_date"),
         Input("date-range", "end_date"),
     ]
 )
-def update_metrics(indicator, selected_localities, start_date, end_date):
+def update_metrics(indicator, selected_localities, time_range, custom_start_date, custom_end_date):
     service = CoralDataService()
-    # Replace with your real data logic:
+    
+    # Calculate dates based on time range selection (same logic as main callback)
+    if time_range == "all":
+        start_date = None
+        end_date = None
+    elif time_range == "custom":
+        start_date = custom_start_date
+        end_date = custom_end_date
+    elif time_range == "1year":
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=365)
+    elif time_range == "6months":
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=182)
+    elif time_range == "3months":
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=91)
+    else:
+        # Default to all time
+        start_date = None
+        end_date = None
+    
+    # Get data with calculated dates
     df_management = service.get_management_data(start_date, end_date)
-    total_mass = df_management["managed_mass_kg"].sum()
-    num_actions = len(df_management)
-    # Example: if you have a column 'km_monitored'
+    total_mass = df_management["managed_mass_kg"].sum() if not df_management.empty else 0
+    num_actions = len(df_management) if not df_management.empty else 0
     km_monitored = service.get_km_monitored(start_date, end_date)
 
     return f"{total_mass:,.0f}", f"{num_actions:,}", f"{km_monitored:,.2f}"
@@ -556,6 +588,93 @@ def go_back_to_dashboard(n_clicks):
     if n_clicks:
         return "dashboard"
     return dash.no_update
+
+# Update report tab summary cards based on date range and locality
+@app.callback(
+    [
+        Output("report-total-localities", "children"),
+        Output("report-total-mass", "children"),
+        Output("report-total-occurrences", "children"),
+        Output("report-avg-dpue", "children"),
+    ],
+    [
+        Input("locality-dropdown", "value"),
+        Input("time-range-dropdown", "value"),
+        Input("date-range", "start_date"),
+        Input("date-range", "end_date"),
+    ]
+)
+def update_report_summary(selected_localities, time_range, custom_start_date, custom_end_date):
+    """Update the summary statistics cards in the report tab."""
+    from cs_controllers import REBIO_LOCALITIES, REBIO_ENTORNO_LOCALITIES, REBIO_SEM_LILI_ENTORNO_LOCALITIES
+    
+    service = CoralDataService()
+    
+    # Calculate dates based on time range selection (same logic as main callback)
+    if time_range == "all":
+        start_date = None
+        end_date = None
+    elif time_range == "custom":
+        start_date = custom_start_date
+        end_date = custom_end_date
+    elif time_range == "1year":
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=365)
+    elif time_range == "6months":
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=182)
+    elif time_range == "3months":
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=91)
+    else:
+        # Default to all time
+        start_date = None
+        end_date = None
+    
+    # Get filtered data
+    dpue_data = service.get_dpue_by_locality(start_date, end_date)
+    management_data = service.get_management_data(start_date, end_date)
+    occurrences_data = service.get_occurrences_data(start_date, end_date)
+    
+    # Filter by localities if specified
+    if selected_localities is not None and 0 not in selected_localities:
+        # Build list of locality IDs from selected groups/individual localities
+        locality_ids = []
+        for loc in selected_localities:
+            if loc == "rebiogrp":
+                locality_ids.extend(REBIO_LOCALITIES)
+            elif loc == "rebiogrp_entorno":
+                locality_ids.extend(REBIO_ENTORNO_LOCALITIES)
+            elif loc == "rebiogrp_sem_lili_entorno":
+                locality_ids.extend(REBIO_SEM_LILI_ENTORNO_LOCALITIES)
+            else:
+                try:
+                    locality_ids.append(int(loc))
+                except:
+                    pass
+        
+        locality_ids = list(set(locality_ids))
+        
+        # Filter dataframes
+        if not dpue_data.empty:
+            dpue_data = dpue_data[dpue_data['locality_id'].isin(locality_ids)]
+        if not management_data.empty:
+            management_data = management_data[management_data['locality_id'].isin(locality_ids)]
+        if not occurrences_data.empty:
+            occurrences_data = occurrences_data[occurrences_data['locality_id'].isin(locality_ids)]
+    
+    # Calculate statistics
+    total_localities = dpue_data['locality_id'].nunique() if not dpue_data.empty else 0
+    total_management_kg = management_data['managed_mass_kg'].sum() if not management_data.empty else 0
+    total_occurrences = len(occurrences_data) if not occurrences_data.empty else 0
+    avg_dpue = dpue_data['DPUE'].mean() if not dpue_data.empty else 0
+    
+    return (
+        str(total_localities),
+        f"{total_management_kg:.1f} kg",
+        str(total_occurrences),
+        f"{avg_dpue:.2f}"
+    )
 
 if __name__ == "__main__":
     app.run(debug=True)
