@@ -445,7 +445,7 @@ class CoralDataService:
         Returns:
             pandas.DataFrame: A DataFrame containing management data.
         """
-        query = "SELECT management_id, Locality_id, Management_coords, Date, Observer, Depth, Number_of_divers, Method, Managed_mass_kg, Observation, occurrences_managed FROM data_coralsol_management"
+        query = "SELECT management_id, Locality_id, Management_coords, Date, Observer, Depth, Number_of_divers, Number_of_cylinders, Method, Managed_mass_kg, Observation, occurrences_managed FROM data_coralsol_management"
         df = pd.read_sql(query, db.engine)
         df.columns = df.columns.str.lower()
 
@@ -454,7 +454,7 @@ class CoralDataService:
         if start_date and end_date:
             df = df[(df['date'] >= start_date) & (df['date'] <= end_date)]
 
-        return df[['management_id', 'locality_id', 'management_coords', 'date', 'observer', 'depth', 'number_of_divers', 'method', 'managed_mass_kg', 'observation', 'occurrences_managed']]
+        return df[['management_id', 'locality_id', 'management_coords', 'date', 'observer', 'depth', 'number_of_divers', 'number_of_cylinders', 'method', 'managed_mass_kg', 'observation', 'occurrences_managed']]
 
     def get_days_since_last_management(self, start_date=None, end_date=None):
         query = "SELECT Locality_id, Date, Observation FROM data_coralsol_management"

@@ -214,6 +214,11 @@ def create_management_efficiency_chart():
         yaxis='y2'
     ))
     
+    # Find years with mechanical methods
+    mechanical_years = management_data[
+        management_data['method'].str.contains('mecanizado', case=False, na=False)
+    ]['year'].unique()
+    
     fig.update_layout(
         title="Esforço de Manejo ao Longo dos Anos",
         xaxis=dict(title="Ano"),
@@ -224,6 +229,22 @@ def create_management_efficiency_chart():
         template='plotly_white',
         legend=dict(x=0.01, y=0.99)
     )
+    
+    # Add red arrows to indicate mechanical methods
+    for year in mechanical_years:
+        fig.add_annotation(
+            x=year,
+            y=1.05,
+            yref='paper',
+            text='',
+            showarrow=True,
+            arrowhead=2,
+            arrowsize=1.5,
+            arrowwidth=2,
+            arrowcolor='red',
+            ax=0,
+            ay=-30
+        )
     
     return fig
 
@@ -452,6 +473,11 @@ def create_removal_rate_per_day_chart():
         )
     ))
     
+    # Find years with mechanical methods
+    mechanical_years = management_data[
+        management_data['method'].str.contains('mecanizado', case=False, na=False)
+    ]['year'].unique()
+    
     fig.update_layout(
         title="Razão de Remoção de Massa de Coral por Dia de Manejo por Ano<br><sub>REBIO Arvoredo + Entorno Imediato</sub>",
         xaxis=dict(
@@ -467,6 +493,139 @@ def create_removal_rate_per_day_chart():
         showlegend=False
     )
     
+    # Add red arrows to indicate mechanical methods
+    for year in mechanical_years:
+        fig.add_annotation(
+            x=year,
+            y=1.05,
+            yref='paper',
+            text='',
+            showarrow=True,
+            arrowhead=2,
+            arrowsize=1.5,
+            arrowwidth=2,
+            arrowcolor='red',
+            ax=0,
+            ay=-30
+        )
+    
+    return fig
+
+
+def create_mass_per_cylinder_chart():
+    """Create chart showing managed mass per cylinder by year for REBIO + Entorno."""
+    service = CoralDataService()
+    
+    # Get REBIO + Entorno locality IDs
+    from cs_controllers import REBIO_ENTORNO_LOCALITIES
+    
+    # Get all management data
+    management_data = service.get_management_data(None, None)
+    
+    if management_data.empty:
+        return go.Figure().update_layout(
+            title="Sem dados de manejo disponíveis",
+            height=400
+        )
+    
+    # Filter to REBIO + Entorno localities
+    management_data = management_data[management_data['locality_id'].isin(REBIO_ENTORNO_LOCALITIES)]
+    
+    if management_data.empty:
+        return go.Figure().update_layout(
+            title="Sem dados de manejo para REBIO + Entorno",
+            height=400
+        )
+    
+    # Ensure date is datetime and extract year
+    management_data['date'] = pd.to_datetime(management_data['date'], dayfirst=True, errors='coerce')
+    management_data = management_data.dropna(subset=['date'])
+    management_data['year'] = management_data['date'].dt.year
+    
+    # Convert cylinders to numeric and filter out invalid/missing values
+    management_data['number_of_cylinders'] = pd.to_numeric(management_data['number_of_cylinders'], errors='coerce')
+    management_data['managed_mass_kg'] = pd.to_numeric(management_data['managed_mass_kg'], errors='coerce')
+    
+    # Filter out rows with zero or null cylinders/mass
+    management_data = management_data[
+        (management_data['number_of_cylinders'] > 0) & 
+        (management_data['managed_mass_kg'] > 0)
+    ]
+    
+    if management_data.empty:
+        return go.Figure().update_layout(
+            title="Sem dados válidos de cilindros para REBIO + Entorno",
+            height=400
+        )
+    
+    # Group by year and calculate metrics
+    yearly_stats = management_data.groupby('year').agg({
+        'managed_mass_kg': 'sum',
+        'number_of_cylinders': 'sum'
+    }).reset_index()
+    
+    # Calculate mass per cylinder
+    yearly_stats['kg_per_cylinder'] = yearly_stats['managed_mass_kg'] / yearly_stats['number_of_cylinders']
+    yearly_stats['kg_per_cylinder'] = yearly_stats['kg_per_cylinder'].round(2)
+    
+    # Create figure
+    fig = go.Figure()
+    
+    # Bar chart for kg per cylinder
+    fig.add_trace(go.Bar(
+        x=yearly_stats['year'],
+        y=yearly_stats['kg_per_cylinder'],
+        name='kg/cilindro',
+        marker_color='#3498db',
+        text=yearly_stats['kg_per_cylinder'].round(2),
+        textposition='auto',
+        textfont=dict(size=12, color='white'),
+        hovertemplate=(
+            '<b>Ano: %{x}</b><br>' +
+            'Massa por Cilindro: %{y:.2f} kg<br>' +
+            'Total de Cilindros: %{customdata[0]}<br>' +
+            'Massa Total: %{customdata[1]:.1f} kg<br>' +
+            '<extra></extra>'
+        ),
+        customdata=yearly_stats[['number_of_cylinders', 'managed_mass_kg']].values
+    ))
+    
+    # Find years with mechanical methods
+    mechanical_years = management_data[
+        management_data['method'].str.contains('mecanizado', case=False, na=False)
+    ]['year'].unique()
+    
+    fig.update_layout(
+        title="Massa Manejada por Cilindro Utilizado por Ano<br><sub>REBIO Arvoredo + Entorno Imediato</sub>",
+        xaxis=dict(
+            title="Ano",
+            dtick=1
+        ),
+        yaxis=dict(
+            title="Massa por Cilindro (kg/cilindro)"
+        ),
+        height=500,
+        template='plotly_white',
+        hovermode='x unified',
+        showlegend=False
+    )
+    
+    # Add red arrows to indicate mechanical methods
+    for year in mechanical_years:
+        fig.add_annotation(
+            x=year,
+            y=1.05,
+            yref='paper',
+            text='',
+            showarrow=True,
+            arrowhead=2,
+            arrowsize=1.5,
+            arrowwidth=2,
+            arrowcolor='red',
+            ax=0,
+            ay=-30
+        )
+    
     return fig
 
 
@@ -479,7 +638,8 @@ def get_report_layout():
         html.P(
             "Análises detalhadas de todos os dados de monitoramento e manejo do coral-sol. "
             "Os dados são processados em tempo real a partir da base de dados completa.",
-            className="text-muted mb-4"
+            className="mb-4",
+            style={"color": "#ffffff"}
         ),
         html.Hr(),
         
@@ -539,7 +699,7 @@ def get_report_layout():
         html.Hr(className="mt-5"),
         html.H3("Esforço de Manejo", className="mb-3"),
         dcc.Markdown("""
-        Análise da massa total manejada por ano e o número de eventos de manejo realizados.
+        Análise da massa total manejada por ano e o número de eventos de manejo realizados. As setas vermelhas indicam anos em que métodos mecanizados foram utilizados, o que pode influenciar a eficiência do manejo.
         """),
         dcc.Loading(
             dcc.Graph(id='report-management-chart', figure=create_management_efficiency_chart()),
@@ -548,14 +708,27 @@ def get_report_layout():
         
         # Removal Rate per Day Section
         html.Hr(className="mt-5"),
-        html.H3("Eficiência do Manejo", className="mb-3"),
+        html.H3("Massa Manejada por dia por ano", className="mb-3"),
         dcc.Markdown("""
         Razão de remoção de massa de coral por dia de manejo ao longo dos anos.
-        Este indicador mostra a eficiência média do esforço de manejo, considerando apenas os dias
-        em que houve atividades de remoção na REBIO Arvoredo e Entorno Imediato.
+        Este indicador mostra a massa manejada por dia de manejo, considerando apenas os dias
+        em que houve atividades de remoção na REBIO Arvoredo e Entorno Imediato. As setas vermelhas indicam anos em que métodos mecanizados foram utilizados, o que pode influenciar a eficiência do manejo.
         """),
         dcc.Loading(
             dcc.Graph(id='report-removal-rate-chart', figure=create_removal_rate_per_day_chart()),
+            type="circle"
+        ),
+        
+        # Mass per Cylinder Section
+        html.Hr(className="mt-5"),
+        html.H3("Massa Manejada por Cilindro", className="mb-3"),
+        dcc.Markdown("""
+        Razão de massa de coral manejada por cilindro utilizado ao longo dos anos.
+        Este indicador mostra a eficiência do manejo em relação ao consumo de ar,
+        considerando apenas eventos com registro válido de cilindros na REBIO Arvoredo e Entorno Imediato. As setas vermelhas indicam anos em que métodos mecanizados foram utilizados, o que pode influenciar a eficiência do manejo.
+        """),
+        dcc.Loading(
+            dcc.Graph(id='report-mass-per-cylinder-chart', figure=create_mass_per_cylinder_chart()),
             type="circle"
         ),
         
@@ -564,7 +737,8 @@ def get_report_layout():
         html.P(
             "Nota: Todos os gráficos são gerados dinamicamente com base nos dados mais recentes da base de dados. "
             "Para análises específicas por período ou localidade, utilize a aba 'Dashboard'.",
-            className="text-muted small mt-4 mb-5"
+            className="small mt-4 mb-5",
+            style={"color": "#ffffff"}
         ),
         
     ], fluid=True)
