@@ -724,8 +724,9 @@ def get_report_layout():
         html.H3("Massa Manejada por Cilindro", className="mb-3"),
         dcc.Markdown("""
         Razão de massa de coral manejada por cilindro utilizado ao longo dos anos.
-        Este indicador mostra a eficiência do manejo em relação ao consumo de ar,
-        considerando apenas eventos com registro válido de cilindros na REBIO Arvoredo e Entorno Imediato. As setas vermelhas indicam anos em que métodos mecanizados foram utilizados, o que pode influenciar a eficiência do manejo.
+        Este indicador mostra a eficiência do manejo em relação ao consumo de ar por mergulhadores (Coelho-Souza et al., 2025),
+        considerando apenas eventos com registro válido de cilindros na REBIO Arvoredo e Entorno Imediato. 
+         As setas vermelhas indicam anos em que métodos mecanizados foram utilizados, o que pode influenciar a eficiência do manejo.
         """),
         dcc.Loading(
             dcc.Graph(id='report-mass-per-cylinder-chart', figure=create_mass_per_cylinder_chart()),
