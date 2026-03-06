@@ -1,5 +1,6 @@
 from dash import dcc, html
 import dash_bootstrap_components as dbc
+from datetime import datetime, timedelta
 from app import app
 from services.data_service import CoralDataService
 
@@ -50,8 +51,14 @@ print("ENTORNO_LOCALITIES:", ENTORNO_LOCALITIES)
 REBIO_ENTORNO_LOCALITIES = list(set(REBIO_LOCALITIES + ENTORNO_LOCALITIES))
 print("REBIO_ENTORNO_LOCALITIES:", REBIO_ENTORNO_LOCALITIES)
 
+# REBIO (sem Lili) + Entorno Imediato
+REBIO_SEM_LILI = [id for id in REBIO_LOCALITIES if id != name_to_id.get("Naufrágio do Lili")]
+REBIO_SEM_LILI_ENTORNO_LOCALITIES = list(set(REBIO_SEM_LILI + ENTORNO_LOCALITIES))
+print("REBIO_SEM_LILI_ENTORNO_LOCALITIES:", REBIO_SEM_LILI_ENTORNO_LOCALITIES)
+
 GROUP_OPTIONS = [
     {"label": "REBIO + Entorno Imediato", "value": "rebiogrp_entorno"},
+    {"label": "REBIO (sem Lili) + Entorno Imediato", "value": "rebiogrp_sem_lili_entorno"},
     {"label": "REBIO", "value": "rebiogrp"},
     {"label": "Todas", "value": 0},
    
@@ -75,9 +82,30 @@ cs_controls = dbc.Row([
         html.A("Thiago Silveira", href="https://silveiratcl.github.io/site/", target="_blank"),
     ]),
     html.H3("""Selecione o Período""", style={"margin-top": "30px", "margin-bottom": "20px"}),
-    dcc.DatePickerRange(
-        id="date-range",
-        display_format="DD-MM-YYYY"
+    dcc.Dropdown(
+        id="time-range-dropdown",
+        options=[
+            {"label": "Último ano", "value": "1year"},
+            {"label": "Últimos 6 meses", "value": "6months"},
+            {"label": "Últimos 3 meses", "value": "3months"},
+            {"label": "Personalizado", "value": "custom"},
+            {"label": "Toda a base de dados", "value": "all"},
+        ],
+        value="1year",
+        clearable=False,
+        placeholder="Selecionar período"
+    ),
+    html.Div(
+        id="custom-date-container",
+        style={"display": "none", "margin-top": "10px"},
+        children=[
+            dcc.DatePickerRange(
+                id="date-range",
+                display_format="DD-MM-YYYY",
+                start_date=(datetime.now() - timedelta(days=365)).date(),
+                end_date=datetime.now().date()
+            )
+        ]
     ),
     html.H3("""Selecione a Localidade""", style={"margin-top": "30px", "margin-bottom": "20px"}),
     dcc.Dropdown(
@@ -93,6 +121,8 @@ cs_controls = dbc.Row([
         options=[
             {"label": "DPUE", "value": "dpue"},
             {"label": "IAR-DAFOR", "value": "dafor"},
+            {"label": "RAI-W (Índice Ponderado)", "value": "raiw"},
+            {"label": "DAFOR ESPACIAL", "value": "dafor_spatial"},
             {"label": "OCORRÊNCIAS", "value": "occurrences"},
             {"label": "MASSA MANEJADA (KG)", "value": "management"},
             {"label": "ÚLTIMO MANEJO (DIAS)", "value": "days_since_management"},
@@ -114,6 +144,8 @@ def filter_localities(selected_localities, df):
             ids.extend(REBIO_LOCALITIES)
         elif loc == "rebiogrp_entorno":
             ids.extend(REBIO_ENTORNO_LOCALITIES)
+        elif loc == "rebiogrp_sem_lili_entorno":
+            ids.extend(REBIO_SEM_LILI_ENTORNO_LOCALITIES)
         else:
             try:
                 ids.append(int(loc))

@@ -9,8 +9,19 @@ import numpy as np
 import matplotlib
 import matplotlib.cm
 from geopy.distance import geodesic
+import os
 
-mapbox_token ="pk.eyJ1Ijoic2lsdmVpcmF0Y2wiLCJhIjoiY21iNWs2NGNqMWU1djJrcGxtbWdoZGNqZiJ9.OSx-QCgArevVT7HgToBfBA"
+# Read Mapbox token from file
+def get_mapbox_token():
+    token_path = os.path.join(os.path.dirname(__file__), 'keys', 'mapbox_key')
+    try:
+        with open(token_path, 'r') as f:
+            return f.read().strip()
+    except FileNotFoundError:
+        print(f"Warning: Mapbox token file not found at {token_path}")
+        return None
+
+mapbox_token = get_mapbox_token()
 
 def value_to_color(val, vmin, vmax, cmap_name='viridis'):
     norm = (val - vmin) / (vmax - vmin) if vmax > vmin else 0
@@ -100,6 +111,197 @@ def build_map_figure(dpue_df): # DPUE valuess
         mapbox_accesstoken=mapbox_token,
         #mapbox_style="open-street-map",
         mapbox_zoom=10,
+        mapbox_center={"lat": mean_lat, "lon": mean_lon},
+        margin={"r":10,"t":30,"l":10,"b":10},
+        height=600
+    )
+    return fig
+
+def build_raiw_map_figure(raiw_df):
+    """
+    Builds a map figure for RAI-W (Relative Abundance Index - Weighted) values using Plotly.
+    """
+    import plotly.graph_objects as go
+    import numpy as np
+    import pandas as pd
+    import json
+
+    service = CoralDataService()
+    localities = service.get_locality_data()
+
+    # Only keep localities present in the filtered raiw_df
+    localities = localities[localities['locality_id'].isin(raiw_df['locality_id'])]
+    localities = localities.merge(raiw_df[['locality_id', 'RAIW']], on='locality_id', how='left')
+    localities['RAIW'] = localities['RAIW'].fillna(0)
+
+    raiw_min = localities['RAIW'].min()
+    raiw_max = localities['RAIW'].max()
+    colorscale = 'Viridis'
+
+    fig = go.Figure()
+    for _, row in localities.iterrows():
+        try:
+            points = json.loads(row['coords_local'])
+            if points and isinstance(points, list) and isinstance(points[0], list):
+                lats, lons = zip(*points)
+                color = value_to_color(row['RAIW'], raiw_min, raiw_max, 'viridis')
+                fig.add_trace(go.Scattermapbox(
+                    showlegend=False,
+                    lat=lats,
+                    lon=lons,
+                    mode="lines+markers",
+                    name="",
+                    line=dict(width=4, color=color),
+                    marker=dict(size=6, color=color),
+                    hoverinfo="text",
+                    text=f"{row['name']}<br>RAI-W: {row['RAIW']:.2f}" if not pd.isna(row['RAIW']) else row['name']
+                ))
+        except Exception as e:
+            print(f"Error plotting {row['name']}: {e}")
+            pass
+
+    # Add a dummy trace for the colorbar
+    raiw_vals = localities['RAIW'].dropna()
+    if not raiw_vals.empty:
+        fig.add_trace(go.Scattermapbox(
+            lat=[None], lon=[None],
+            mode="markers",
+            marker=dict(
+                size=0.1,
+                color=np.linspace(raiw_min, raiw_max, 10),
+                colorscale=colorscale,
+                cmin=raiw_min,
+                cmax=raiw_max,
+                colorbar=dict(
+                    title="RAI-W",
+                    thickness=25,
+                    y=0.5,
+                    x=1.02,
+                    xanchor="left",
+                    yanchor="middle",
+                    len=0.95
+                ),
+            ),
+            showlegend=False,
+            hoverinfo='none'
+        ))
+
+    if not localities.empty:
+        mean_lat = localities['LATITUDE'].mean()
+        mean_lon = localities['LONGITUDE'].mean()
+    else:
+        mean_lat, mean_lon = -27, -48
+
+    fig.update_layout(
+        template="plotly_dark",
+        mapbox_style="satellite-streets",
+        mapbox_accesstoken=mapbox_token,
+        mapbox_zoom=10,
+        mapbox_center={"lat": mean_lat, "lon": mean_lon},
+        margin={"r":10,"t":30,"l":10,"b":10},
+        height=600
+    )
+    return fig
+
+def build_dafor_spatial_map_figure(segments_df):
+    """
+    Builds a spatial heat map showing DAFOR scores along locality boundaries.
+    Each 100m segment is colored by averaged DAFOR scores from overlapping monitoring.
+    """
+    import plotly.graph_objects as go
+    import numpy as np
+    import pandas as pd
+    
+    print(f"[MAP] Rendering {len(segments_df)} 100m segments...")
+    
+    if segments_df.empty:
+        fig = go.Figure()
+        fig.update_layout(
+            template="plotly_dark",
+            mapbox_style="satellite-streets",
+            mapbox_accesstoken=mapbox_token,
+            mapbox_zoom=10,
+            mapbox_center={"lat": -27.28, "lon": -48.39},
+            margin={"r":10,"t":30,"l":10,"b":10},
+            height=600,
+            title="Sem dados para exibir"
+        )
+        return fig
+    
+    # Define DAFOR color scale
+    dafor_min = segments_df['dafor_score'].min()
+    dafor_max = segments_df['dafor_score'].max()
+    
+    # Ensure we have a valid range
+    if pd.isna(dafor_min) or pd.isna(dafor_max) or dafor_min == dafor_max:
+        dafor_min = 0
+        dafor_max = 10
+    
+    fig = go.Figure()
+    
+    # Plot each 100m segment
+    for _, segment in segments_df.iterrows():
+        try:
+            color = value_to_color(segment['dafor_score'], dafor_min, dafor_max, 'RdYlGn_r')
+            
+            # Create hover text
+            hover_text = (
+                f"{segment['name']}<br>"
+                f"DAFOR: {segment['dafor_score']:.2f}"
+            )
+            
+            fig.add_trace(go.Scattermapbox(
+                showlegend=False,
+                lat=[segment['start_lat'], segment['end_lat']],
+                lon=[segment['start_lon'], segment['end_lon']],
+                mode="lines",
+                line=dict(width=5, color=color),
+                hoverinfo="text",
+                text=hover_text
+            ))
+        except Exception as e:
+            print(f"[MAP] Error plotting segment: {e}")
+            continue
+    
+    # Add colorbar
+    fig.add_trace(go.Scattermapbox(
+        lat=[None], lon=[None],
+        mode="markers",
+        marker=dict(
+            size=0.1,
+            color=np.linspace(dafor_min, dafor_max, 11),
+            colorscale='RdYlGn_r',
+            cmin=dafor_min,
+            cmax=dafor_max,
+            colorbar=dict(
+                title="DAFOR Médio",
+                thickness=25,
+                y=0.5,
+                x=1.02,
+                xanchor="left",
+                yanchor="middle",
+                len=0.95,
+                tickmode='array',
+                tickvals=[0, 2, 4, 6, 8, 10],
+                ticktext=['0 - Ausente', '2 - R (Raro)', '4 - O (Ocasional)', '6 - F (Frequente)', '8 - A (Abundante)', '10 - D (Dominante)']
+            ),
+        ),
+        showlegend=False,
+        hoverinfo='none'
+    ))
+    
+    # Calculate center for map
+    if not segments_df.empty:
+        mean_lat = segments_df[['start_lat', 'end_lat']].values.flatten().mean()
+        mean_lon = segments_df[['start_lon', 'end_lon']].values.flatten().mean()
+    else:
+        mean_lat, mean_lon = -27.28, -48.39
+    
+    fig.update_layout(
+        template="plotly_dark",
+        mapbox_style="satellite-streets",
+        mapbox_accesstoken=mapbox_token,
+        mapbox_zoom=13,
         mapbox_center={"lat": mean_lat, "lon": mean_lon},
         margin={"r":10,"t":30,"l":10,"b":10},
         height=600

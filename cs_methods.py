@@ -288,8 +288,10 @@ html.Ul([
     html.Br(),
 
     html.H3("""
-           Alguns indicadores foram desenvolvidos para avaliação das ações de monitoramento e manejo da invasão do coral-sol na 
-            REBIO Arvoredo e entorno Abaixo exploramos cada um dos indicadores desenvolvidos:
+             
+            Alguns indicadores foram desenvolvidos para avaliação das ações de monitoramento e manejo da invasão do coral-sol na 
+            REBIO Arvoredo e entorno. Os idicadore são calculados e apresentados condicionados aos filtros de período e localidade selecionados no dashboard.
+            Abaixo exploramos cada um dos indicadores desenvolvidos:
 
            """),
     html.Br(),
@@ -306,6 +308,33 @@ html.Ul([
             "Para cada categoria é atribuída a um valor numérico específico. Nos gráficos, o IAR-DAFOR é representado pela soma dos valores de IAR (Índice de Abundância Relativa) por localidade. "
             "Também é possível observar a distribuição das categorias DAFOR por uma ou mais localidades." 
         ]),
+
+        html.Br(),
+        html.Li([
+            html.H3("Índice de Abundância Relativa Ponderado (RAI-W)"),
+            "Para incorporar a abundância relativa com ênfase nos impactos ecológicos não-lineares da dominância do coral-sol, cada pontuação DAFOR minuto a minuto (s_i ∈ {10, 8, 6, 4, 2, 0}) foi convertida em um peso manual w(s_i) que enfatiza as categorias mais altas. "
+            "Os pesos manuais foram determinados por consenso de especialistas e revisão da literatura, garantindo que reflitam o impacto ecológico de densidades variadas de coral-sol. "
+            "Os pesos manuais utilizados foram: w(10) = 1,00, w(8) = 0,80, w(6) = 0,60, w(4) = 0,10, w(2) = 0,04, w(0) = 0. "
+            "Os pesos em nível de minuto foram somados e padronizados pelo mesmo denominador usado no DPUE: RAI-W = Σw(s_i) / (N_horas × Uni100m), "
+            "onde N_horas é o esforço total em horas e Uni100m é o comprimento do segmento em unidades de 100 metros."
+        ]),
+
+        html.Br(),
+        html.Li([
+            html.H3("DAFOR Espacial"),
+            "Este indicador espacializa os valores DAFOR ao longo das bordas das localidades monitoradas, criando um mapa de calor de abundância do coral-sol. "
+            "A metodologia divide cada localidade em segmentos de 100 metros e calcula a média ponderada dos valores DAFOR dos transectos de monitoramento próximos (dentro de um raio de 50 metros). "
+            "A ponderação é feita pelo esforço de amostragem (número de minutos) de cada transecto, garantindo que segmentos com maior esforço de monitoramento contribuam proporcionalmente mais para a média. "
+            "A fórmula utilizada é: DAFOR_espacial = Σ(score × esforço) / Σ(esforço). "
+            "Segmentos sem dados de monitoramento próximos recebem valor 0 (Ausente). A visualização usa a escala de cores invertida vermelho-amarelo-verde (RdYlGn_r), onde vermelho indica alta abundância (Dominante), "
+            "amarelo indica abundância moderada (Frequente) e verde indica baixa abundância ou ausência. Um sistema de cache melhora o desempenho ao armazenar resultados de consultas recentes."
+        ]),
+
+
+
+
+
+
         html.Br(),
         html.Li([
             html.H3("Ocorrências"),
@@ -367,12 +396,13 @@ html.Ul([
     html.Br(),
 
     html.Ul([
-        html.Li("Coelho-Souza, S. A. et al. (2025). A “short blanked” reality: The challenge to control sun coral invasion in a large no-take marine protected area over a decade of adaptive management. Marine Pollution Bulletin, 216, 117947. https://doi.org/10.1016/j.marpolbul.2025.117947"),
+        html.Li("COELHO-SOUZA, S. A. et al. (2025). A “short blanked” reality: The challenge to control sun coral invasion in a large no-take marine protected area over a decade of adaptive management. Marine Pollution Bulletin, 216, 117947. https://doi.org/10.1016/j.marpolbul.2025.117947"),
         html.Li("CREED, J. C. et al. 2025. A Bioinvasão do Coral-Sol. Zenodo. https://doi.org/10.5281/zenodo.16882236"),
         html.Li("CREED, J.C.; FLEURY, B.G. 2009. Monitoramento extensivo de coral-sol (Tubastraea coccinea e T. tagusensis): protocolo de semi-quantificação. Projeto Coral-Sol, Instituto Biodiversidade Marinha, Rio de Janeiro. p 1."),
         html.Li("CREED, J.C. et al. 2017. The Sun-Coral Project: the first social-environmental initiative to manage the biological invasion of Tubastraea spp. in Brazil. Management of Biological Invasions 8(2): 181."),
         html.Li("CREED, J.C. et al. 2017. The invasion of the azooxanthellate coral Tubastraea (Scleractinia: Dendrophylliidae) throughout the world: history, pathways and vectors. Biological Invasions 19: 283-305."),
-        html.Li("SCRISP, DJ; SOUTHWARD, AJ. 1958. The distribution of intertidal organisms along the coasts of the English Channel. Journal of the Marine Biological Association UK 37: 157-208."),
+        html.Li("CRIVELLARO. et al. 2024.(2020). Fighting on the edge: Reproductive effort and population structure of the invasive coral Tubastraea coccinea in its southern Atlantic limit of distribution following control activities. Biological Invasions. https://doi.org/10.1007/s10530-020-02403-5"),
+        html.Li("CRISP, DJ; SOUTHWARD, AJ. 1958. The distribution of intertidal organisms along the coasts of the English Channel. Journal of the Marine Biological Association UK 37: 157-208."),
         html.Li("GRAINGER, S. et al. 2016. Environmental data visualisation for non-scientific contexts: Literature review and design framework. Environmental Modelling & Software, 85, 299-318."),
         html.Li("SILVEIRA, T.C.L. et al. 2023. Protocolo Técnico de monitoramento de coral-sol na REBIO Arvoredo e entorno. In: Protocolos Técnicos de Campo. PACS Arvoredo. Projeto PACS Arvoredo. Florianópolis, 56 p."),
         html.Li("SUTHERLAND, W.J. 2006. Ecological Census Techniques: A Handbook. 2nd edition. Cambridge University Press, Cambridge, UK."),

@@ -2,9 +2,12 @@ import dash
 from dash import Dash, html, dcc, Input, Output
 import dash_bootstrap_components as dbc
 import dash_html_components as html
+from datetime import datetime, timedelta
 from cs_map import (
     build_dafor_sum_map_figure,
     build_map_figure,
+    build_raiw_map_figure,
+    build_dafor_spatial_map_figure,
     build_occurrence_map_figure,
     build_management_map_figure,
     build_days_since_management_map_figure,
@@ -14,14 +17,16 @@ from cs_map import (
     build_monitoring_line_density_map_figure,
 )    
 
-from cs_controllers import cs_controls, REBIO_LOCALITIES, REBIO_ENTORNO_LOCALITIES
+from cs_controllers import cs_controls, REBIO_LOCALITIES, REBIO_ENTORNO_LOCALITIES, REBIO_SEM_LILI_ENTORNO_LOCALITIES
 from services.data_service import CoralDataService
 from dash import Dash, html, dcc, Input, Output
 import dash_bootstrap_components as dbc
 from cs_map import build_map_figure
 from cs_histogram import (
     build_histogram_figure,
-    build_locality_bar_figure, 
+    build_locality_bar_figure,
+    build_raiw_histogram_figure,
+    build_raiw_bar_figure,
     build_dafor_histogram_figure,
     build_dafor_sum_bar_figure,
     build_accumulated_mass_year_figure,
@@ -111,6 +116,16 @@ app.layout = dbc.Container(
 #=========================================
 # Callbacks
 
+# Show/hide custom date picker based on time range selection
+@app.callback(
+    Output("custom-date-container", "style"),
+    Input("time-range-dropdown", "value")
+)
+def toggle_date_picker(time_range):
+    if time_range == "custom":
+        return {"display": "block", "margin-top": "10px"}
+    return {"display": "none"}
+
 # Update map and histogram based on user input
 @app.callback(
     [
@@ -132,13 +147,35 @@ app.layout = dbc.Container(
     [
         Input("indicator-dropdown", "value"),
         Input("locality-dropdown", "value"),
+        Input("time-range-dropdown", "value"),
         Input("date-range", "start_date"),
         Input("date-range", "end_date"),
     ]
 )
 
-def update_visuals(indicator, selected_localities, start_date, end_date):
+def update_visuals(indicator, selected_localities, time_range, custom_start_date, custom_end_date):
     service = CoralDataService()
+    
+    # Calculate dates based on time range selection
+    if time_range == "all":
+        start_date = None
+        end_date = None
+    elif time_range == "custom":
+        start_date = custom_start_date
+        end_date = custom_end_date
+    elif time_range == "1year":
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=365)
+    elif time_range == "6months":
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=182)
+    elif time_range == "3months":
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=91)
+    else:
+        # Default to 1 year
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=365)
 
     # Normalize selected_localities to handle group selection
     if not selected_localities or 0 in (selected_localities if isinstance(selected_localities, list) else [selected_localities]):
@@ -150,6 +187,8 @@ def update_visuals(indicator, selected_localities, start_date, end_date):
                 ids.extend(REBIO_LOCALITIES)
             elif loc == "rebiogrp_entorno":
                 ids.extend(REBIO_ENTORNO_LOCALITIES)
+            elif loc == "rebiogrp_sem_lili_entorno":
+                ids.extend(REBIO_SEM_LILI_ENTORNO_LOCALITIES)
             else:
                 try:
                     ids.append(int(loc))
@@ -220,6 +259,48 @@ def update_visuals(indicator, selected_localities, start_date, end_date):
         bar_style = style_hide
         dafor_hist_style = style_show
         dafor_sum_bar_style = style_show
+        removal_ratio_style = style_hide
+
+    elif indicator == "raiw":
+        # Get RAI-W data per locality
+        raiw_df = service.get_raiw_by_locality(start_date, end_date)
+        if selected_localities:
+            raiw_df = raiw_df[raiw_df['locality_id'].isin(selected_localities)]
+        
+        # Build visualizations
+        fig_map = build_raiw_map_figure(raiw_df)
+        fig_hist = build_raiw_histogram_figure(raiw_df)
+        fig_bar = build_raiw_bar_figure(raiw_df)
+        
+        # Show histogram and bar, hide dafor-specific charts
+        hist_style = style_show
+        bar_style = style_show
+        dafor_hist_style = style_hide
+        dafor_sum_bar_style = style_hide
+        removal_ratio_style = style_hide
+
+    elif indicator == "dafor_spatial":
+        # Get spatial DAFOR data (20m segments with averaged scores)
+        segments_df = service.get_dafor_spatial_data(start_date, end_date)
+        if selected_localities:
+            segments_df = segments_df[segments_df['locality_id'].isin(selected_localities)]
+        
+        # Build spatial heat map
+        fig_map = build_dafor_spatial_map_figure(segments_df)
+        
+        # Hide all charts - only show map for spatial visualization
+        fig_hist = go.Figure()
+        fig_bar = go.Figure()
+        fig_dafor_hist = go.Figure()
+        fig_dafor_sum_bar = go.Figure()
+        fig_line = go.Figure()
+        fig_removal_ratio = go.Figure()
+        
+        hist_style = style_hide
+        bar_style = style_hide
+        dafor_hist_style = style_hide
+        dafor_sum_bar_style = style_hide
+        line_style = style_hide
         removal_ratio_style = style_hide
 
     elif indicator == "occurrences":

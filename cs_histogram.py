@@ -99,6 +99,93 @@ def build_locality_bar_figure(dpue_df):
     )
     return fig
 
+def build_raiw_histogram_figure(raiw_df):
+    """
+    Builds a histogram figure for RAI-W values using Plotly Express.
+    """
+    import plotly.express as px
+
+    # Handle empty or all-NaN RAI-W
+    if raiw_df.empty or raiw_df["RAIW"].dropna().empty:
+        return go.Figure()  # Return an empty figure
+    
+    min_raiw = raiw_df["RAIW"].min()
+    max_raiw = raiw_df["RAIW"].max()
+    if pd.isna(min_raiw) or pd.isna(max_raiw):
+        return go.Figure()  # Return an empty figure
+
+    nbins = int((max_raiw - min_raiw) / 0.5) + 1
+
+    fig = px.histogram(
+        raiw_df,
+        x="RAIW",
+        title="Densidade de RAI-W",
+        nbins=nbins,
+        template="plotly_dark",   
+    )
+
+    fig.update_layout(
+         bargap=0.1,
+         margin={"r":10,"t":35,"l":10,"b":40},
+         title={
+            "text": "Densidade de RAI-W",
+            "x": 0,  # Left justify
+            "xanchor": "left"
+        },
+         height=180, 
+         yaxis_title="Contagem",
+         xaxis_title="RAI-W",
+    )
+    return fig
+
+def build_raiw_bar_figure(raiw_df):
+    """
+    Builds a horizontal bar chart for RAI-W values by locality using Plotly Express.
+    """
+    if raiw_df.empty or raiw_df["RAIW"].dropna().empty:
+        fig = go.Figure()
+        fig.update_layout(
+            template="plotly_dark",
+            xaxis_title="RAI-W",
+            yaxis_title="Localidade",
+            margin={"r":10,"t":20,"l":10,"b":40},
+            height=300
+        )
+        return fig
+
+    # Filter for RAIW > 0 and sort descending
+    df_sorted = raiw_df.dropna(subset=["RAIW"])
+    df_sorted = df_sorted[df_sorted["RAIW"] > 0]
+    df_sorted = df_sorted.sort_values("RAIW", ascending=False)
+    y_col = "name" if "name" in df_sorted.columns else "locality_id"
+    
+    df_sorted[y_col] = df_sorted[y_col].astype(str)
+    df_sorted[y_col] = pd.Categorical(df_sorted[y_col], categories=df_sorted[y_col], ordered=True)
+
+    fig = px.bar(
+        df_sorted,
+        x="RAIW",
+        title="Total RAI-W por Localidade",
+        y=y_col,
+        orientation="h",
+        template="plotly_dark",
+        labels={"RAIW": "RAI-W"},
+        text=y_col,
+    )
+    fig.update_traces(insidetextanchor='start')
+    fig.update_layout(
+        yaxis=dict(autorange="reversed", showticklabels=False),
+        yaxis_title=None,
+        title={
+            "text": "Total RAI-W por Localidade",
+            "x": 0,  # Left justify
+            "xanchor": "left"
+        },
+        margin={"r":10,"t":35,"l":10,"b":40},
+        height=500
+    )
+    return fig
+
 def build_dafor_histogram_figure(dafor_values):
     """
     Builds a histogram figure for DAFOR values using Plotly Express,
