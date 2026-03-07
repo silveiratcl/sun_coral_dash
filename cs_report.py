@@ -61,7 +61,7 @@ def create_summary_statistics():
 
 
 def create_temporal_evolution_chart():
-    """Create chart showing temporal evolution of monitoring effort."""
+    """Create stacked chart showing temporal evolution of transects with and without sun coral."""
     service = CoralDataService()
     
     # Get DAFOR data with dates (raw data, not aggregated)
@@ -78,50 +78,50 @@ def create_temporal_evolution_chart():
     dafor_data = dafor_data.dropna(subset=['date'])
     dafor_data['year_month'] = dafor_data['date'].dt.to_period('M').astype(str)
     
-    # Process dafor_value to count detections
-    dafor_data['dafor_value_processed'] = dafor_data['dafor_value'].apply(
-        lambda x: [pd.to_numeric(i, errors='coerce') for i in str(x).split(',')]
+    # Process dafor_value: split comma-separated values and explode to count individual 1-minute transects
+    dafor_data['dafor_value_list'] = dafor_data['dafor_value'].apply(
+        lambda x: [pd.to_numeric(i, errors='coerce') for i in str(x).split(',') if str(i).strip()]
     )
-    dafor_data['has_detection'] = dafor_data['dafor_value_processed'].apply(
-        lambda x: any(v > 0 for v in x if not pd.isna(v))
-    )
+    dafor_data = dafor_data.explode('dafor_value_list')
+    dafor_data['dafor_value_list'] = pd.to_numeric(dafor_data['dafor_value_list'], errors='coerce')
+    dafor_data = dafor_data.dropna(subset=['dafor_value_list'])
     
-    # Group by month
-    temporal_agg = dafor_data.groupby('year_month').agg({
-        'dafor_id': 'count',  # Number of monitoring transects
-        'has_detection': 'sum'  # Number with detections
-    }).reset_index()
-    temporal_agg.columns = ['Período', 'N° Transectos', 'N° com Detecções']
+    # Check for detections (dafor_value > 0)
+    dafor_data['has_detection'] = dafor_data['dafor_value_list'] > 0
     
-    # Calculate detection rate
-    temporal_agg['Taxa de Detecção (%)'] = (temporal_agg['N° com Detecções'] / temporal_agg['N° Transectos'] * 100).round(1)
+    # Group by month and count individual transects with and without detections
+    temporal_agg = dafor_data.groupby('year_month').apply(
+        lambda df: pd.Series({
+            'Com Coral': df['has_detection'].sum(),  # Individual 1-minute transects with dafor_value > 0
+            'Sem Coral': (~df['has_detection']).sum()  # Individual 1-minute transects without detections
+        })
+    ).reset_index()
+    temporal_agg.columns = ['Período', 'Com Coral', 'Sem Coral']
     
-    # Create dual-axis chart
+    # Create stacked bar chart
     fig = go.Figure()
     
     fig.add_trace(go.Bar(
         x=temporal_agg['Período'],
-        y=temporal_agg['N° Transectos'],
-        name='N° Transectos',
-        marker_color='lightblue',
-        yaxis='y'
+        y=temporal_agg['Com Coral'],
+        name='Com Coral',
+        marker_color='#FF6B6B',
+        hovertemplate='<b>%{x}</b><br>Com Coral: %{y}<extra></extra>'
     ))
     
-    fig.add_trace(go.Scatter(
+    fig.add_trace(go.Bar(
         x=temporal_agg['Período'],
-        y=temporal_agg['Taxa de Detecção (%)'],
-        name='Taxa de Detecção (%)',
-        mode='lines+markers',
-        marker_color='red',
-        line=dict(width=3),
-        yaxis='y2'
+        y=temporal_agg['Sem Coral'],
+        name='Sem Coral',
+        marker_color='#4ECDC4',
+        hovertemplate='<b>%{x}</b><br>Sem Coral: %{y}<extra></extra>'
     ))
     
     fig.update_layout(
-        title="Evolução Temporal do Esforço de Monitoramento",
+        title="Evolução Temporal - Transectos com e sem Coral",
         xaxis=dict(title="Período (Ano-Mês)"),
-        yaxis=dict(title="N° Transectos", side='left'),
-        yaxis2=dict(title="Taxa de Detecção (%)", side='right', overlaying='y'),
+        yaxis=dict(title="N° de Transectos (1 minuto cada)"),
+        barmode='stack',
         hovermode='x unified',
         height=450,
         template='plotly_white',
@@ -283,15 +283,21 @@ def create_dafor_distribution_chart():
         10: '10 - Dominante'
     }
     
+    # Define proper order for DAFOR categories (reversed - from Dominante to Ausente)
+    dafor_order = [10, 8, 6, 4, 2, 0]
+    ordered_labels = [dafor_labels[val] for val in dafor_order if val in value_counts.index]
+    ordered_values = [value_counts[val] for val in dafor_order if val in value_counts.index]
+    ordered_colors = [val for val in dafor_order if val in value_counts.index]
+    
     fig = go.Figure(go.Bar(
-        x=[dafor_labels.get(x, str(x)) for x in value_counts.index],
-        y=value_counts.values,
+        x=ordered_labels,
+        y=ordered_values,
         marker=dict(
-            color=value_counts.index,
+            color=ordered_colors,
             colorscale='RdYlGn_r',
             showscale=False
         ),
-        text=value_counts.values,
+        text=ordered_values,
         textposition='auto'
     ))
     
@@ -299,6 +305,11 @@ def create_dafor_distribution_chart():
         title="Distribuição da Escala DAFOR (Todos os Monitoramentos)",
         xaxis_title="Categoria DAFOR",
         yaxis_title="Frequência Absoluta",
+        xaxis=dict(
+            categoryorder='array',
+            categoryarray=ordered_labels,
+            tickangle=-45
+        ),
         height=450,
         template='plotly_white'
     )
@@ -637,7 +648,7 @@ def get_report_layout():
         html.H2("Relatório em Tempo Real", className="mb-2 mt-4"),
         html.P(
             "Análises detalhadas de todos os dados de monitoramento e manejo do coral-sol. "
-            "Os dados são processados em tempo real a partir da base de dados completa.",
+            "Os dados são processados em tempo real a partir da base de dados completa do Banco de Dados específico para os monitoramentos do coral-sol do Instituto Hórus.",
             className="mb-4",
             style={"color": "#ffffff"}
         ),
@@ -651,8 +662,8 @@ def get_report_layout():
         html.Hr(className="mt-5"),
         html.H3("Evolução Temporal", className="mb-3"),
         dcc.Markdown("""
-        O gráfico abaixo mostra a evolução do esforço de monitoramento ao longo do tempo,
-        com o número de eventos de monitoramento por mês e o DPUE médio correspondente.
+        O gráfico abaixo mostra a evolução do esforço de monitoramento ao longo do tempo(numero de transectos visuais de 1 minuto) diferenciando transectos com detecção e sem detecção de coral-sol. 
+        Os dados são agrupados por período (ano-mês) para mostrar tendências temporais na presença do coral-sol nos monitoramentos realizados.
         """),
         dcc.Loading(
             dcc.Graph(id='report-temporal-chart', figure=create_temporal_evolution_chart()),
