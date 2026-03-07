@@ -131,6 +131,51 @@ def create_temporal_evolution_chart():
     return fig
 
 
+def create_occurrence_by_year_chart():
+    """Create bar chart showing number of occurrences marked per year."""
+    service = CoralDataService()
+    
+    # Get occurrence data
+    occurrence_data = service.get_occurrences_data(None, None)
+    
+    if occurrence_data.empty:
+        return go.Figure().update_layout(
+            title="Sem dados de ocorrências disponíveis",
+            height=400
+        )
+    
+    # Extract year from date
+    occurrence_data['year'] = occurrence_data['date'].dt.year
+    
+    # Count occurrences by year
+    yearly_counts = occurrence_data.groupby('year').size().reset_index(name='count')
+    yearly_counts = yearly_counts.sort_values('year')
+    
+    # Create bar chart
+    fig = go.Figure(go.Bar(
+        x=yearly_counts['year'],
+        y=yearly_counts['count'],
+        marker_color='#FFB347',
+        text=yearly_counts['count'],
+        textposition='auto',
+        hovertemplate='<b>Ano: %{x}</b><br>Ocorrências: %{y}<extra></extra>'
+    ))
+    
+    fig.update_layout(
+        title="Marcação de Ocorrências por Ano",
+        xaxis_title="Ano",
+        yaxis_title="N° de Ocorrências",
+        height=450,
+        template='plotly_white',
+        xaxis=dict(
+            tickmode='linear',
+            dtick=1
+        )
+    )
+    
+    return fig
+
+
 def create_locality_ranking_chart():
     """Create chart ranking localities by DPUE."""
     service = CoralDataService()
@@ -667,6 +712,18 @@ def get_report_layout():
         """),
         dcc.Loading(
             dcc.Graph(id='report-temporal-chart', figure=create_temporal_evolution_chart()),
+            type="circle"
+        ),
+        
+        # Occurrence Registration Section
+        html.Hr(className="mt-5"),
+        html.H3("Marcação de Ocorrências", className="mb-3"),
+        dcc.Markdown("""
+        Número de ocorrências de coral-sol registradas por ano. Cada ponto representa uma nova ocorrência 
+        georreferenciada identificada durante atividades de monitoramento ou fiscalização.
+        """),
+        dcc.Loading(
+            dcc.Graph(id='report-occurrence-chart', figure=create_occurrence_by_year_chart()),
             type="circle"
         ),
         
