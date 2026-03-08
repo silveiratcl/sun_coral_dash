@@ -466,6 +466,105 @@ def create_dafor_by_year_stacked_chart():
     return fig
 
 
+def create_dafor_sum_by_locality_chart():
+    """Create stacked bar chart showing sum of DAFOR scores by locality."""
+    service = CoralDataService()
+    
+    # Get sum of DAFOR values by locality
+    dafor_sum_data = service.get_sum_of_dafor_by_locality(None, None)
+    
+    if dafor_sum_data.empty or dafor_sum_data["DAFOR"].dropna().empty:
+        return go.Figure().update_layout(
+            title="Sem dados DAFOR disponíveis",
+            height=500
+        )
+    
+    # DAFOR category mapping
+    dafor_num_to_label = {
+        10: "D", 8: "A", 6: "F", 4: "O", 2: "R"
+    }
+    category_order = [10, 8, 6, 4, 2]
+    category_labels = [dafor_num_to_label[v] for v in category_order]
+    
+    # DAFOR full labels for legend
+    dafor_full_labels = {
+        10: "D - Dominante",
+        8: "A - Abundante",
+        6: "F - Frequente",
+        4: "O - Ocasional",
+        2: "R - Raro"
+    }
+    
+    def map_to_category(val):
+        return min(category_order, key=lambda x: abs(x - val))
+    
+    df = dafor_sum_data.copy()
+    df = df[df["DAFOR"] > 0]  # Exclude Ausente and zero values
+    df["DAFOR_CAT"] = df["DAFOR"].apply(map_to_category)
+    df["DAFOR_CLASS"] = df["DAFOR_CAT"].map(dafor_num_to_label)
+    
+    df_grouped = df.groupby(['name', 'DAFOR_CLASS'], as_index=False)['DAFOR'].sum()
+    
+    pivot = df_grouped.pivot(index='name', columns='DAFOR_CLASS', values='DAFOR').fillna(0)
+    
+    for label in category_labels:
+        if label not in pivot.columns:
+            pivot[label] = 0
+    
+    pivot = pivot[category_labels]
+    pivot["total"] = pivot.sum(axis=1)
+    pivot = pivot[pivot["total"] > 0]  # Only localities with total > 0
+    pivot = pivot.sort_values("total", ascending=False)
+    
+    # Create figure
+    fig = go.Figure()
+    
+    # Color scheme for DAFOR categories
+    colors = {
+        'D': '#c0392b',   # Dark Red - Dominant
+        'A': '#e74c3c',   # Red - Abundant
+        'F': '#e67e22',   # Dark Orange - Frequent
+        'O': '#f39c12',   # Orange - Occasional
+        'R': '#3498db'    # Blue - Rare
+    }
+    
+    # Add traces for each DAFOR category in reverse order
+    for label in reversed(category_labels):
+        if label in pivot.columns:
+            fig.add_trace(go.Bar(
+                name=dafor_full_labels[category_order[category_labels.index(label)]],
+                y=pivot.index,
+                x=pivot[label],
+                orientation='h',
+                marker_color=colors.get(label, '#999999'),
+                text=pivot[label].astype(int),
+                textposition='inside',
+                textfont=dict(color='white', size=11),
+                hovertemplate='<b>%{y}</b><br>' + dafor_full_labels[category_order[category_labels.index(label)]] + ': %{x}<extra></extra>'
+            ))
+    
+    fig.update_layout(
+        title="Soma das Pontuações DAFOR por Localidade",
+        xaxis_title="Soma da Pontuação DAFOR",
+        yaxis_title="Localidade",
+        barmode='stack',
+        height=500,
+        template='plotly_white',
+        yaxis=dict(autorange="reversed"),
+        legend=dict(
+            title="Categoria DAFOR",
+            orientation="v",
+            yanchor="top",
+            y=1,
+            xanchor="right",
+            x=1.15
+        ),
+        hovermode='y unified'
+    )
+    
+    return fig
+
+
 def create_removal_rate_per_day_chart():
     """Create chart showing coral mass removal rate per management day per year for REBIO + Entorno."""
     service = CoralDataService()
@@ -693,7 +792,9 @@ def get_report_layout():
         html.H2("Relatório em Tempo Real", className="mb-2 mt-4"),
         html.P(
             "Análises detalhadas de todos os dados de monitoramento e manejo do coral-sol. "
-            "Os dados são processados em tempo real a partir da base de dados completa do Banco de Dados específico para os monitoramentos do coral-sol do Instituto Hórus.",
+            "Os dados são processados em tempo real a partir da base de dados completa do Banco de Dados específico para os monitoramentos do coral-sol do Instituto Hórus."
+            "Este relatório apresenta uma visão abrangente da situação atual do coral-sol, incluindo estatísticas gerais, evolução temporal, distribuição de abundância e eficiência do manejo."
+            "Caso deseje análises específicas por período ou localidade, utilize a aba 'Dashboard' para acessar filtros personalizados e gráficos interativos.",
             className="mb-4",
             style={"color": "#ffffff"}
         ),
@@ -720,7 +821,7 @@ def get_report_layout():
         html.H3("Marcação de Ocorrências", className="mb-3"),
         dcc.Markdown("""
         Número de ocorrências de coral-sol registradas por ano. Cada ponto representa uma nova ocorrência 
-        georreferenciada identificada durante atividades de monitoramento ou fiscalização.
+        georreferenciada identificada durante atividades de monitoramento. Na aba 'Dashboard', é possível filtrar por localidade e período e visualizar as fotos das marcações.             
         """),
         dcc.Loading(
             dcc.Graph(id='report-occurrence-chart', figure=create_occurrence_by_year_chart()),
@@ -760,6 +861,20 @@ def get_report_layout():
         """),
         dcc.Loading(
             dcc.Graph(id='report-dafor-year-stacked', figure=create_dafor_by_year_stacked_chart()),
+            type="circle"
+        ),
+        
+        # DAFOR Sum by Locality Section
+        html.Hr(className="mt-5"),
+        html.H3("Soma de Pontuações DAFOR por Localidade", className="mb-3"),
+        dcc.Markdown("""
+        Soma das pontuações DAFOR agrupadas por localidade e categoria da escala DAFOR.
+        Este gráfico apresenta um sumário da abundância do coral-sol em cada localidade monitorada,
+        mostrando a distribuição das categorias de abundância acumuladas ao longo de todos os monitoramentos.
+        Os dados devem ser interpretados com cautela, pois este produto não leva em consideração os esforços diferentes realizados em cada localidade.             
+        """),
+        dcc.Loading(
+            dcc.Graph(id='report-dafor-sum-locality', figure=create_dafor_sum_by_locality_chart()),
             type="circle"
         ),
         
