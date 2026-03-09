@@ -606,63 +606,19 @@ def go_back_to_dashboard(n_clicks):
 )
 def update_report_summary(selected_localities, time_range, custom_start_date, custom_end_date):
     """Update the summary statistics cards in the report tab."""
-    from cs_controllers import REBIO_LOCALITIES, REBIO_ENTORNO_LOCALITIES, REBIO_SEM_LILI_ENTORNO_LOCALITIES
-    
     service = CoralDataService()
-    
-    # Calculate dates based on time range selection (same logic as main callback)
-    if time_range == "all":
-        start_date = None
-        end_date = None
-    elif time_range == "custom":
-        start_date = custom_start_date
-        end_date = custom_end_date
-    elif time_range == "1year":
-        end_date = datetime.now()
-        start_date = end_date - timedelta(days=365)
-    elif time_range == "6months":
-        end_date = datetime.now()
-        start_date = end_date - timedelta(days=182)
-    elif time_range == "3months":
-        end_date = datetime.now()
-        start_date = end_date - timedelta(days=91)
-    else:
-        # Default to all time
-        start_date = None
-        end_date = None
-    
-    # Get filtered data
+
+    # Report summary cards should always reflect the full dataset.
+    # Inputs are kept only to trigger recalculation when dashboard controls change.
+    _ = (selected_localities, time_range, custom_start_date, custom_end_date)
+    start_date = None
+    end_date = None
+
+    # Get full-dataset data
     dpue_data = service.get_dpue_by_locality(start_date, end_date)
     management_data = service.get_management_data(start_date, end_date)
     occurrences_data = service.get_occurrences_data(start_date, end_date)
-    
-    # Filter by localities if specified
-    if selected_localities is not None and 0 not in selected_localities:
-        # Build list of locality IDs from selected groups/individual localities
-        locality_ids = []
-        for loc in selected_localities:
-            if loc == "rebiogrp":
-                locality_ids.extend(REBIO_LOCALITIES)
-            elif loc == "rebiogrp_entorno":
-                locality_ids.extend(REBIO_ENTORNO_LOCALITIES)
-            elif loc == "rebiogrp_sem_lili_entorno":
-                locality_ids.extend(REBIO_SEM_LILI_ENTORNO_LOCALITIES)
-            else:
-                try:
-                    locality_ids.append(int(loc))
-                except:
-                    pass
-        
-        locality_ids = list(set(locality_ids))
-        
-        # Filter dataframes
-        if not dpue_data.empty:
-            dpue_data = dpue_data[dpue_data['locality_id'].isin(locality_ids)]
-        if not management_data.empty:
-            management_data = management_data[management_data['locality_id'].isin(locality_ids)]
-        if not occurrences_data.empty:
-            occurrences_data = occurrences_data[occurrences_data['locality_id'].isin(locality_ids)]
-    
+
     # Calculate statistics
     total_localities = dpue_data['locality_id'].nunique() if not dpue_data.empty else 0
     total_management_kg = management_data['managed_mass_kg'].sum() if not management_data.empty else 0

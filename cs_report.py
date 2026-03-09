@@ -566,7 +566,7 @@ def create_dafor_sum_by_locality_chart():
 
 
 def create_removal_rate_per_day_chart():
-    """Create chart showing coral mass removal rate per management day per year for REBIO + Entorno."""
+    """Create stacked bar chart showing coral mass removal rate per management day per year by method for REBIO + Entorno."""
     service = CoralDataService()
     
     # Get REBIO + Entorno locality IDs
@@ -596,45 +596,56 @@ def create_removal_rate_per_day_chart():
     management_data['year'] = management_data['date'].dt.year
     management_data['date_only'] = management_data['date'].dt.date
     
-    # Group by year and calculate metrics
-    yearly_stats = management_data.groupby('year').agg({
-        'managed_mass_kg': 'sum',  # Total mass per year
-        'date_only': 'nunique',     # Number of unique management days
-        'management_id': 'count'    # Total events (for reference)
+    # Standardize method names to handle variations in capitalization
+    management_data['method'] = management_data['method'].str.strip()
+    
+    # Group by year, method, and calculate metrics
+    yearly_method_stats = management_data.groupby(['year', 'method']).agg({
+        'managed_mass_kg': 'sum',
+        'date_only': 'nunique'
     }).reset_index()
     
-    yearly_stats.columns = ['year', 'total_mass_kg', 'unique_days', 'total_events']
+    yearly_method_stats.columns = ['year', 'method', 'total_mass_kg', 'unique_days']
     
-    # Calculate removal rate: kg per management day
-    yearly_stats['kg_per_day'] = yearly_stats['total_mass_kg'] / yearly_stats['unique_days']
-    yearly_stats['kg_per_day'] = yearly_stats['kg_per_day'].round(2)
+    # Calculate removal rate: kg per management day for each method
+    yearly_method_stats['kg_per_day'] = (yearly_method_stats['total_mass_kg'] / 
+                                          yearly_method_stats['unique_days']).round(2)
     
-    # Create figure
+    # Pivot to get methods as columns
+    pivot_data = yearly_method_stats.pivot(index='year', columns='method', values='kg_per_day').fillna(0)
+    
+    # Create figure with stacked bars
     fig = go.Figure()
     
-    # Bar chart for kg per day
-    fig.add_trace(go.Bar(
-        x=yearly_stats['year'],
-        y=yearly_stats['kg_per_day'],
-        name='kg/dia de manejo',
-        marker_color='#2ecc71',
-        text=yearly_stats['kg_per_day'].round(1),
-        textposition='auto',
-        textfont=dict(size=12, color='white'),
-        hovertemplate=(
-            '<b>Ano: %{x}</b><br>' +
-            'Razão: %{y:.2f} kg/dia<br>' +
-            '<extra></extra>'
-        )
-    ))
+    # Define colors and order for methods
+    method_colors = {
+        'Manual': '#3498db',              # Blue
+        'Manual e Mecanizado': '#f39c12', # Orange
+        'Mecanizado': '#e74c3c'           # Red
+    }
     
-    # Find years with mechanical methods
-    mechanical_years = management_data[
-        management_data['method'].str.contains('mecanizado', case=False, na=False)
-    ]['year'].unique()
+    method_order = ['Manual', 'Manual e Mecanizado', 'Mecanizado']
+    
+    # Add traces for each method
+    for method in method_order:
+        if method in pivot_data.columns:
+            fig.add_trace(go.Bar(
+                x=pivot_data.index,
+                y=pivot_data[method],
+                name=method,
+                marker_color=method_colors.get(method, '#95a5a6'),
+                text=pivot_data[method].round(1),
+                textposition='inside',
+                textfont=dict(size=11, color='white'),
+                hovertemplate=(
+                    '<b>Ano: %{x}</b><br>' +
+                    f'{method}: %{{y:.2f}} kg/dia<br>' +
+                    '<extra></extra>'
+                )
+            ))
     
     fig.update_layout(
-        title="Razão de Remoção de Massa de Coral por Dia de Manejo por Ano<br><sub>REBIO Arvoredo + Entorno Imediato</sub>",
+        title="Razão de Remoção de Massa de Coral por Dia de Manejo por Ano por Método<br><sub>REBIO Arvoredo + Entorno Imediato</sub>",
         xaxis=dict(
             title="Ano",
             dtick=1
@@ -642,33 +653,25 @@ def create_removal_rate_per_day_chart():
         yaxis=dict(
             title="Massa Removida por Dia de Manejo (kg/dia)"
         ),
+        barmode='stack',
         height=500,
         template='plotly_white',
         hovermode='x unified',
-        showlegend=False
-    )
-    
-    # Add red arrows to indicate mechanical methods
-    for year in mechanical_years:
-        fig.add_annotation(
-            x=year,
-            y=1.05,
-            yref='paper',
-            text='',
-            showarrow=True,
-            arrowhead=2,
-            arrowsize=1.5,
-            arrowwidth=2,
-            arrowcolor='red',
-            ax=0,
-            ay=-30
+        legend=dict(
+            title="Método",
+            orientation="v",
+            yanchor="top",
+            y=1,
+            xanchor="right",
+            x=1.15
         )
+    )
     
     return fig
 
 
 def create_mass_per_cylinder_chart():
-    """Create chart showing managed mass per cylinder by year for REBIO + Entorno."""
+    """Create stacked bar chart showing managed mass per cylinder by year and method for REBIO + Entorno."""
     service = CoralDataService()
     
     # Get REBIO + Entorno locality IDs
@@ -713,45 +716,54 @@ def create_mass_per_cylinder_chart():
             height=400
         )
     
-    # Group by year and calculate metrics
-    yearly_stats = management_data.groupby('year').agg({
+    # Standardize method names to handle variations in capitalization
+    management_data['method'] = management_data['method'].str.strip()
+    
+    # Group by year, method and calculate metrics
+    yearly_method_stats = management_data.groupby(['year', 'method']).agg({
         'managed_mass_kg': 'sum',
         'number_of_cylinders': 'sum'
     }).reset_index()
     
-    # Calculate mass per cylinder
-    yearly_stats['kg_per_cylinder'] = yearly_stats['managed_mass_kg'] / yearly_stats['number_of_cylinders']
-    yearly_stats['kg_per_cylinder'] = yearly_stats['kg_per_cylinder'].round(2)
+    # Calculate mass per cylinder for each method
+    yearly_method_stats['kg_per_cylinder'] = (yearly_method_stats['managed_mass_kg'] / 
+                                               yearly_method_stats['number_of_cylinders']).round(2)
     
-    # Create figure
+    # Pivot to get methods as columns
+    pivot_data = yearly_method_stats.pivot(index='year', columns='method', values='kg_per_cylinder').fillna(0)
+    
+    # Create figure with stacked bars
     fig = go.Figure()
     
-    # Bar chart for kg per cylinder
-    fig.add_trace(go.Bar(
-        x=yearly_stats['year'],
-        y=yearly_stats['kg_per_cylinder'],
-        name='kg/cilindro',
-        marker_color='#3498db',
-        text=yearly_stats['kg_per_cylinder'].round(2),
-        textposition='auto',
-        textfont=dict(size=12, color='white'),
-        hovertemplate=(
-            '<b>Ano: %{x}</b><br>' +
-            'Massa por Cilindro: %{y:.2f} kg<br>' +
-            'Total de Cilindros: %{customdata[0]}<br>' +
-            'Massa Total: %{customdata[1]:.1f} kg<br>' +
-            '<extra></extra>'
-        ),
-        customdata=yearly_stats[['number_of_cylinders', 'managed_mass_kg']].values
-    ))
+    # Define colors and order for methods
+    method_colors = {
+        'Manual': '#3498db',              # Blue
+        'Manual e Mecanizado': '#f39c12', # Orange
+        'Mecanizado': '#e74c3c'           # Red
+    }
     
-    # Find years with mechanical methods
-    mechanical_years = management_data[
-        management_data['method'].str.contains('mecanizado', case=False, na=False)
-    ]['year'].unique()
+    method_order = ['Manual', 'Manual e Mecanizado', 'Mecanizado']
+    
+    # Add traces for each method
+    for method in method_order:
+        if method in pivot_data.columns:
+            fig.add_trace(go.Bar(
+                x=pivot_data.index,
+                y=pivot_data[method],
+                name=method,
+                marker_color=method_colors.get(method, '#95a5a6'),
+                text=pivot_data[method].round(1),
+                textposition='inside',
+                textfont=dict(size=11, color='white'),
+                hovertemplate=(
+                    '<b>Ano: %{x}</b><br>' +
+                    f'{method}: %{{y:.2f}} kg/cilindro<br>' +
+                    '<extra></extra>'
+                )
+            ))
     
     fig.update_layout(
-        title="Massa Manejada por Cilindro Utilizado por Ano<br><sub>REBIO Arvoredo + Entorno Imediato</sub>",
+        title="Massa Manejada por Cilindro Utilizado por Ano por Método<br><sub>REBIO Arvoredo + Entorno Imediato</sub>",
         xaxis=dict(
             title="Ano",
             dtick=1
@@ -759,27 +771,19 @@ def create_mass_per_cylinder_chart():
         yaxis=dict(
             title="Massa por Cilindro (kg/cilindro)"
         ),
+        barmode='stack',
         height=500,
         template='plotly_white',
         hovermode='x unified',
-        showlegend=False
-    )
-    
-    # Add red arrows to indicate mechanical methods
-    for year in mechanical_years:
-        fig.add_annotation(
-            x=year,
-            y=1.05,
-            yref='paper',
-            text='',
-            showarrow=True,
-            arrowhead=2,
-            arrowsize=1.5,
-            arrowwidth=2,
-            arrowcolor='red',
-            ax=0,
-            ay=-30
+        legend=dict(
+            title="Método",
+            orientation="v",
+            yanchor="top",
+            y=1,
+            xanchor="right",
+            x=1.15
         )
+    )
     
     return fig
 
@@ -792,8 +796,8 @@ def get_report_layout():
         html.H2("Relatório em Tempo Real", className="mb-2 mt-4"),
         html.P(
             "Análises detalhadas de todos os dados de monitoramento e manejo do coral-sol. "
-            "Os dados são processados em tempo real a partir da base de dados completa do Banco de Dados específico para os monitoramentos do coral-sol do Instituto Hórus."
-            "Este relatório apresenta uma visão abrangente da situação atual do coral-sol, incluindo estatísticas gerais, evolução temporal, distribuição de abundância e eficiência do manejo."
+            "Os dados são processados em tempo real a partir da base de dados completa do Banco de Dados na Base de Dados Nacional de Espécies Exóticas Invasoras, modelado especificamente para este fim."
+            "Este relatório apresenta uma visão abrangente da situação atual da invasão do coral-sol, incluindo estatísticas gerais, evolução temporal, distribuição de abundância e eficiência do manejo."
             "Caso deseje análises específicas por período ou localidade, utilize a aba 'Dashboard' para acessar filtros personalizados e gráficos interativos.",
             className="mb-4",
             style={"color": "#ffffff"}
@@ -893,9 +897,9 @@ def get_report_layout():
         html.Hr(className="mt-5"),
         html.H3("Massa Manejada por dia por ano", className="mb-3"),
         dcc.Markdown("""
-        Razão de remoção de massa de coral por dia de manejo ao longo dos anos.
-        Este indicador mostra a massa manejada por dia de manejo, considerando apenas os dias
-        em que houve atividades de remoção na REBIO Arvoredo e Entorno Imediato. As setas vermelhas indicam anos em que métodos mecanizados foram utilizados, o que pode influenciar a eficiência do manejo.
+        Razão de remoção de massa de coral por dia de manejo ao longo dos anos, discriminada por método de manejo.
+        O gráfico empilhado mostra a contribuição de cada método (Manual, Manual e Mecanizado, Mecanizado) 
+        para a massa total removida por dia de manejo na REBIO Arvoredo e Entorno Imediato.
         """),
         dcc.Loading(
             dcc.Graph(id='report-removal-rate-chart', figure=create_removal_rate_per_day_chart()),
@@ -906,10 +910,10 @@ def get_report_layout():
         html.Hr(className="mt-5"),
         html.H3("Massa Manejada por Cilindro", className="mb-3"),
         dcc.Markdown("""
-        Razão de massa de coral manejada por cilindro utilizado ao longo dos anos.
-        Este indicador mostra a eficiência do manejo em relação ao consumo de ar por mergulhadores (Coelho-Souza et al., 2025),
-        considerando apenas eventos com registro válido de cilindros na REBIO Arvoredo e Entorno Imediato. 
-         As setas vermelhas indicam anos em que métodos mecanizados foram utilizados, o que pode influenciar a eficiência do manejo.
+        Razão de massa de coral manejada por cilindro utilizado ao longo dos anos, discriminada por método de manejo.
+        O gráfico empilhado mostra a contribuição de cada método (Manual, Manual e Mecanizado, Mecanizado)
+        para a eficiência do manejo em relação ao consumo de ar por mergulhadores (Coelho-Souza et al., 2025),
+        considerando apenas eventos com registro válido de cilindros na REBIO Arvoredo e Entorno Imediato.
         """),
         dcc.Loading(
             dcc.Graph(id='report-mass-per-cylinder-chart', figure=create_mass_per_cylinder_chart()),
