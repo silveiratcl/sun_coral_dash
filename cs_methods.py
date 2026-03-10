@@ -422,6 +422,7 @@ html.Ul([
         Desenvolvimento da Produção de Petróleo do Campo de Baúna, localizado na Bacia de Santos, sob concessão da Karoon Energy e tem como principal objetivo gerar conhecimento científico sobre a espécie
         Tubastraea coccinea (coral-sol) e o desenvolvimento de ferramentas e técnicas para a prevenção e controle desta espécie na REBIO Arvoredo e entorno.
            """),
+    html.Br(),       
 
     html.H1("Contato",
                     style={
@@ -470,6 +471,10 @@ html.Ul([
         "alignItems": "center",
         "gap": "22px"
     }),
+
+
+
+
 
     html.Button("Voltar", id="back-to-dashboard-btn", n_clicks=0, style={"margin-top": "30px"})
 ])
