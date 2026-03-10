@@ -471,9 +471,5 @@ html.Ul([
         "gap": "22px"
     }),
 
-
-
-
-
     html.Button("Voltar", id="back-to-dashboard-btn", n_clicks=0, style={"margin-top": "30px"})
 ])
