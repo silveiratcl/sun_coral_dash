@@ -565,6 +565,192 @@ def create_dafor_sum_by_locality_chart():
     return fig
 
 
+def create_raiw_by_year_chart():
+    """Create bar chart showing weighted relative abundance index (IAR-P/RAI-W) by year."""
+    service = CoralDataService()
+
+    # Get REBIO + Entorno locality IDs
+    from cs_controllers import REBIO_ENTORNO_LOCALITIES
+
+    # Manual weights from method description
+    weight_map = {
+        10: 1.00,
+        8: 0.80,
+        6: 0.60,
+        4: 0.10,
+        2: 0.04,
+        0: 0.00,
+    }
+
+    dafor_data = service.get_dafor_data(None, None)
+    locality_data = service.get_locality_data()
+
+    if dafor_data.empty or locality_data.empty:
+        return go.Figure().update_layout(
+            title="Sem dados disponíveis para IAR-P/RAI-W",
+            height=450,
+        )
+
+    # Filter to REBIO + Entorno localities
+    dafor_data = dafor_data[dafor_data['locality_id'].isin(REBIO_ENTORNO_LOCALITIES)].copy()
+
+    if dafor_data.empty:
+        return go.Figure().update_layout(
+            title="Sem dados para REBIO + Entorno",
+            height=450,
+        )
+
+    # Parse dates and extract year
+    dafor_data['date'] = pd.to_datetime(dafor_data['date'], dayfirst=True, errors='coerce')
+    dafor_data = dafor_data.dropna(subset=['date'])
+    dafor_data['year'] = dafor_data['date'].dt.year
+
+    # Compute Uni100m per locality using the same approach as DPUE
+    locality_data['locality_length_m'] = locality_data['coords_local'].apply(service.calculate_locality_length)
+    locality_data['Uni100m'] = locality_data['locality_length_m'] / 100
+
+    dafor_data = dafor_data.merge(
+        locality_data[['locality_id', 'Uni100m']],
+        on='locality_id',
+        how='left'
+    )
+
+    # Convert each record's DAFOR series into (sum of weights, number of minutes)
+    def _compute_weight_and_minutes(dafor_value):
+        values = [pd.to_numeric(i, errors='coerce') for i in str(dafor_value).split(',')]
+        values = [v for v in values if not pd.isna(v)]
+        return pd.Series({
+            'weight_sum': float(sum(weight_map.get(v, 0.0) for v in values)),
+            'Nmin': int(len(values)),
+        })
+
+    dafor_data[['weight_sum', 'Nmin']] = dafor_data['dafor_value'].apply(_compute_weight_and_minutes)
+
+    dafor_data['Nhours'] = dafor_data['Nmin'] / 60
+    dafor_data['denominator'] = dafor_data['Nhours'] * dafor_data['Uni100m']
+
+    # Guard against zero/invalid effort normalization denominators
+    dafor_data = dafor_data[
+        dafor_data['denominator'].notna() &
+        (dafor_data['denominator'] > 0)
+    ]
+
+    if dafor_data.empty:
+        return go.Figure().update_layout(
+            title="Sem dados válidos para cálculo de IAR-P/RAI-W",
+            height=450,
+        )
+
+    yearly_raiw = dafor_data.groupby('year').agg(
+        weight_sum=('weight_sum', 'sum'),
+        denominator=('denominator', 'sum'),
+        nmin=('Nmin', 'sum'),
+    ).reset_index().sort_values('year')
+
+    yearly_raiw = yearly_raiw[yearly_raiw['denominator'] > 0]
+    yearly_raiw['RAIW'] = yearly_raiw['weight_sum'] / yearly_raiw['denominator']
+
+    if yearly_raiw.empty:
+        return go.Figure().update_layout(
+            title="Sem dados anuais de IAR-P/RAI-W",
+            height=450,
+        )
+
+    fig = go.Figure(go.Bar(
+        x=yearly_raiw['year'],
+        y=yearly_raiw['RAIW'],
+        marker_color='#1f77b4',
+        text=yearly_raiw['RAIW'].round(3),
+        textposition='outside',
+        customdata=np.column_stack([
+            yearly_raiw['weight_sum'].round(2),
+            yearly_raiw['denominator'].round(2),
+            yearly_raiw['nmin'].astype(int),
+        ]),
+        hovertemplate=(
+            '<b>Ano: %{x}</b><br>' +
+            'IAR-P/RAI-W: %{y:.3f}<br>' +
+            'Soma dos pesos: %{customdata[0]}<br>' +
+            'Denominador padronizado: %{customdata[1]}<br>' +
+            'Minutos monitorados: %{customdata[2]}<extra></extra>'
+        )
+    ))
+
+    fig.update_layout(
+        title="IAR-P (RAI-W) por Ano<br><sub>REBIO Arvoredo + Entorno Imediato</sub>",
+        xaxis=dict(title="Ano", dtick=1),
+        yaxis=dict(title="IAR-P / RAI-W"),
+        height=500,
+        template='plotly_white'
+    )
+
+    return fig
+
+
+def create_raiw_by_locality_chart():
+    """Create horizontal bar chart showing weighted relative abundance index (IAR-P/RAI-W) by locality."""
+    service = CoralDataService()
+
+    # Keep scope aligned with yearly chart
+    from cs_controllers import REBIO_ENTORNO_LOCALITIES
+
+    raiw_data = service.get_raiw_by_locality(None, None)
+
+    if raiw_data.empty:
+        return go.Figure().update_layout(
+            title="Sem dados disponíveis para IAR-P/RAI-W por localidade",
+            height=500,
+        )
+
+    raiw_data = raiw_data[raiw_data['locality_id'].isin(REBIO_ENTORNO_LOCALITIES)].copy()
+    raiw_data = raiw_data[raiw_data['RAIW'].notna()].copy()
+
+    if raiw_data.empty:
+        return go.Figure().update_layout(
+            title="Sem dados para REBIO + Entorno",
+            height=500,
+        )
+
+    raiw_data = raiw_data.sort_values('RAIW', ascending=False)
+
+    fig = go.Figure(go.Bar(
+        y=raiw_data['name'],
+        x=raiw_data['RAIW'],
+        orientation='h',
+        marker=dict(
+            color=raiw_data['RAIW'],
+            colorscale='Blues',
+            showscale=True,
+            colorbar=dict(title='IAR-P')
+        ),
+        text=raiw_data['RAIW'].round(3),
+        textposition='outside',
+        customdata=np.column_stack([
+            raiw_data['Nmin'].astype(int),
+            raiw_data['Nhoras'].round(2),
+            raiw_data['Uni100m'].round(2),
+        ]),
+        hovertemplate=(
+            '<b>%{y}</b><br>' +
+            'IAR-P/RAI-W: %{x:.3f}<br>' +
+            'Minutos monitorados: %{customdata[0]}<br>' +
+            'Horas monitoradas: %{customdata[1]}<br>' +
+            'Uni100m: %{customdata[2]}<extra></extra>'
+        )
+    ))
+
+    fig.update_layout(
+        title='IAR-P (RAI-W) por Localidade<br><sub>REBIO Arvoredo + Entorno Imediato</sub>',
+        xaxis=dict(title='IAR-P / RAI-W'),
+        yaxis=dict(title='Localidade', autorange='reversed'),
+        height=650,
+        template='plotly_white',
+        margin=dict(l=10, r=10, t=80, b=50)
+    )
+
+    return fig
+
+
 def create_removal_rate_per_day_chart():
     """Create stacked bar chart showing coral mass removal rate per management day per year by method for REBIO + Entorno."""
     service = CoralDataService()
@@ -795,10 +981,20 @@ def get_report_layout():
         # Header
         html.H2("Relatório em Tempo Real", className="mb-2 mt-4"),
         html.P(
-            "Análises detalhadas de todos os dados de monitoramento e manejo do coral-sol. "
-            "Os dados são processados em tempo real a partir da base de dados completa do Banco de Dados na Base de Dados Nacional de Espécies Exóticas Invasoras, modelado especificamente para este fim."
-            "Este relatório apresenta uma visão abrangente da situação atual da invasão do coral-sol, incluindo estatísticas gerais, evolução temporal, distribuição de abundância e eficiência do manejo."
-            "Caso deseje análises específicas por período ou localidade, utilize a aba 'Dashboard' para acessar filtros personalizados e gráficos interativos.",
+            [
+                "Análises detalhadas de todos os dados de monitoramento e manejo do coral-sol. "
+                "Os dados são processados em tempo real a partir da base de dados completa do Banco de Dados ",
+                html.A(
+                    "Base de Dados Nacional de Espécies Exóticas Invasoras,",
+                    href="https://bd.institutohorus.org.br/",
+                    target="_blank",
+                    rel="noopener noreferrer",
+                    style={"color": "#66b3ff", "textDecoration": "underline"}
+                ),
+                " modelado especificamente para este fim. "
+                "Este relatório apresenta uma visão abrangente da situação atual da invasão do coral-sol, incluindo estatísticas gerais, evolução temporal, distribuição de abundância e eficiência do manejo. "
+                "Caso deseje análises específicas por período ou localidade, utilize a aba 'Dashboard' para acessar filtros personalizados e gráficos interativos. ",
+            ],
             className="mb-4",
             style={"color": "#ffffff"}
         ),
@@ -865,6 +1061,33 @@ def get_report_layout():
         """),
         dcc.Loading(
             dcc.Graph(id='report-dafor-year-stacked', figure=create_dafor_by_year_stacked_chart()),
+            type="circle"
+        ),
+
+        # RAI-W by Year Section
+        html.Hr(className="mt-5"),
+        html.H3("Indice de Abundancia Relativa Ponderado (IAR-P / RAI-W)", className="mb-3"),
+        dcc.Markdown("""
+        Serie anual do IAR-P (ou RAI-W), calculado com os pesos manuais da escala DAFOR:
+        w(10)=1.00, w(8)=0.80, w(6)=0.60, w(4)=0.10, w(2)=0.04, w(0)=0.
+        O indice e padronizado pelo mesmo denominador do DPUE (Nhours x Uni100m),
+        permitindo comparacao temporal do nivel relativo de abundancia considerando o esforco de monitoramento.
+        """),
+        dcc.Loading(
+            dcc.Graph(id='report-raiw-year-chart', figure=create_raiw_by_year_chart()),
+            type="circle"
+        ),
+
+        # RAI-W by Locality Section
+        html.Hr(className="mt-5"),
+        html.H3("Indice de Abundancia Relativa Ponderado por Localidade (IAR-P / RAI-W)", className="mb-3"),
+        dcc.Markdown("""
+        Distribuicao do IAR-P (RAI-W) por localidade para REBIO Arvoredo e Entorno Imediato,
+        considerando todos os monitoramentos disponiveis. O indice segue a formula:
+        IAR-P = soma_i(w(s_i)) / (Nhours x Uni100m).
+        """),
+        dcc.Loading(
+            dcc.Graph(id='report-raiw-locality-chart', figure=create_raiw_by_locality_chart()),
             type="circle"
         ),
         
