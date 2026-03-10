@@ -1070,8 +1070,8 @@ def get_report_layout():
         dcc.Markdown("""
         Serie anual do IAR-P (ou RAI-W), calculado com os pesos manuais da escala DAFOR:
         w(10)=1.00, w(8)=0.80, w(6)=0.60, w(4)=0.10, w(2)=0.04, w(0)=0.
-        O indice e padronizado pelo mesmo denominador do DPUE (Nhours x Uni100m),
-        permitindo comparacao temporal do nivel relativo de abundancia considerando o esforco de monitoramento.
+        O indice e padronizado pelo mesmo denominador do DPUE (Nhours x Uni100m), onde Nhours e o numero total de horas monitoradas e Uni100m é comprimento total da localidade divido por 100 metros.
+        Este índice permite a comparação temporal de abundancia relativa considerando o esforco de monitoramento em horas e espaço disponível (tramanho da localidade).
         """),
         dcc.Loading(
             dcc.Graph(id='report-raiw-year-chart', figure=create_raiw_by_year_chart()),
@@ -1083,8 +1083,7 @@ def get_report_layout():
         html.H3("Indice de Abundancia Relativa Ponderado por Localidade (IAR-P / RAI-W)", className="mb-3"),
         dcc.Markdown("""
         Distribuicao do IAR-P (RAI-W) por localidade para REBIO Arvoredo e Entorno Imediato,
-        considerando todos os monitoramentos disponiveis. O indice segue a formula:
-        IAR-P = soma_i(w(s_i)) / (Nhours x Uni100m).
+        considerando todos os dados de monitoramento disponiveis.
         """),
         dcc.Loading(
             dcc.Graph(id='report-raiw-locality-chart', figure=create_raiw_by_locality_chart()),

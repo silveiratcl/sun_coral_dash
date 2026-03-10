@@ -416,8 +416,12 @@ html.Ul([
         Tubastraea coccinea (coral-sol) e o desenvolvimento de ferramentas e técnicas para a prevenção e controle desta espécie na REBIO Arvoredo e entorno.
            """),
 
-
-
+    html.H3("Contato"),
+    html.P("""
+        Para dúvidas, sugestões, relatos de erros ou mais informações sobre o dashboard e os dados de monitoramento e manejo do coral-sol, entre em contato:
+        Thiago Cesar Lima Silveira - silveira.tcl at gmail.com
+        Relatos de ocorrências de coral-sol podem ser enviados para o NGI Florianópolis - ngi.florianopolis at icmbio.gov.br   
+                   """),       
 
     html.Button("Voltar", id="back-to-dashboard-btn", n_clicks=0, style={"margin-top": "30px"})
 ])
