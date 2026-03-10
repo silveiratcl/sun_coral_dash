@@ -408,20 +408,46 @@ html.Ul([
         html.Li("SUTHERLAND, W.J. 2006. Ecological Census Techniques: A Handbook. 2nd edition. Cambridge University Press, Cambridge, UK."),
     ]),
     html.Br(),
-
-    html.H3("*PACS Arvoredo"),
+          
+    html.H1("*PACS ARVOREDO",
+            style={
+    "marginTop": "20px",
+    "marginBottom": "10px",
+    "borderBottom": "2px solid #2a7ae2",
+    "paddingBottom": "5px"
+    }),
+    html.Br(),
     html.P("""
         O PACS Arvoredo (Plano de Ação para Prevenção e Controle do Coral-sol na REBIO Arvoredo e Entorno) é uma condicionante da Licença de Operação nº 1587/2020 emitida pelo IBAMA em 08/07/2020 referente ao Sistema de 
         Desenvolvimento da Produção de Petróleo do Campo de Baúna, localizado na Bacia de Santos, sob concessão da Karoon Energy e tem como principal objetivo gerar conhecimento científico sobre a espécie 
         Tubastraea coccinea (coral-sol) e o desenvolvimento de ferramentas e técnicas para a prevenção e controle desta espécie na REBIO Arvoredo e entorno.
            """),
+    html.Br(),       
 
-    html.H3("Contato"),
+    html.H1("CONTATO",
+            style={
+    "marginTop": "20px",
+    "marginBottom": "10px",
+    "borderBottom": "2px solid #2a7ae2",
+    "paddingBottom": "5px"
+    }),
+    html.Br(),      
     html.P("""
-        Para dúvidas, sugestões, relatos de erros ou mais informações sobre o dashboard e os dados de monitoramento e manejo do coral-sol, entre em contato:
-        Thiago Cesar Lima Silveira - silveira.tcl at gmail.com
-        Relatos de ocorrências de coral-sol podem ser enviados para o NGI Florianópolis - ngi.florianopolis at icmbio.gov.br   
-                   """),       
+        Para dúvidas, sugestões, relatos de erros ou mais informações sobre o dashboard e os dados de monitoramento e manejo do coral-sol: 
+                   """),  
+        html.P("""Thiago C. L. Silveira - silveira.tcl at gmail.com
+               """),             
+        html.P("""
+         Relatos de ocorrências de coral-sol podem ser enviados para o ICMBio - NGI Florianópolis: 
+                   """),      
+        html.P("""ngi.florianopolis at icmbio.gov.br 
+               """),                        
+    html.Br(),
+    html.Br(),                
 
-    html.Button("Voltar", id="back-to-dashboard-btn", n_clicks=0, style={"margin-top": "30px"})
+
+
+
+
+    html.Button("Voltar", id="back-to-dashboard-btn-methods", n_clicks=0, style={"margin-top": "30px"})
 ])

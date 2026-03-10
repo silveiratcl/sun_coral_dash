@@ -1150,6 +1150,9 @@ def get_report_layout():
             className="small mt-4 mb-5",
             style={"color": "#ffffff"}
         ),
+
+    html.Button("Voltar", id="back-to-dashboard-btn", n_clicks=0, style={"margin-top": "30px"})
+  
         
     ], fluid=True)
     

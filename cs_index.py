@@ -582,10 +582,11 @@ from dash.dependencies import Input, Output
 @app.callback(
     Output("main-tabs", "value"),
     Input("back-to-dashboard-btn", "n_clicks"),
+    Input("back-to-dashboard-btn-methods", "n_clicks"),
     prevent_initial_call=True
 )
-def go_back_to_dashboard(n_clicks):
-    if n_clicks:
+def go_back_to_dashboard(n_clicks_report, n_clicks_methods):
+    if (n_clicks_report and n_clicks_report > 0) or (n_clicks_methods and n_clicks_methods > 0):
         return "dashboard"
     return dash.no_update
 
