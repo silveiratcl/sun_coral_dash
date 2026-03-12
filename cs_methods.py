@@ -1,12 +1,12 @@
 from dash import html
 
 methods_layout = html.Div([
-    html.Img(src="assets/img/head_sobre.png", 
-             style={"width": "80%", 
-                    "margin": "30px auto", 
+    html.Img(src="assets/img/head_sobre.png",
+             style={"width": "80%",
+                    "margin": "30px auto",
                     "display": "block",
                     "border-radius": "20px"}),
-    html.Br(),                
+    html.Br(),
     html.Br(),
 
     html.H1("DADOS DO MONITORAMENTO E MANEJO DO CORAL-SOL - REBIO ARVOREDO",
@@ -15,21 +15,21 @@ methods_layout = html.Div([
     "marginBottom": "10px",
     "borderBottom": "2px solid #2a7ae2",
     "paddingBottom": "5px"
-    }), 
+    }),
     html.Br(),
     html.Br(),
     html.H3("""
-            Um dashboard de dados é uma ferramenta que visa ajudar usuários/gestores a visualizar e compreender dados complexos. 
-            Ao atuar como uma centralização dos dados processados coletados em campo, ele pode apresentar métricas essenciais e tendências em um 
-            formato visualmente intuitivo. Isso o torna uma solução ideal para órgãos ambientais que buscam adquirir elementos para a 
+            Um dashboard de dados é uma ferramenta que visa ajudar usuários/gestores a visualizar e compreender dados complexos.
+            Ao atuar como uma centralização dos dados processados coletados em campo, ele pode apresentar métricas essenciais e tendências em um
+            formato visualmente intuitivo. Isso o torna uma solução ideal para órgãos ambientais que buscam adquirir elementos para a
             Detecção Precoce - Resposta Rápida e continuamente adaptar estratégias de manejo de espécies invasoras com base em dados.
             Nesta documentação exploraremos os componentes fundamentais de desenvolvimento e interpretação dos dados no Dashboard de Monitoramento e Manejo do Coral-Sol - *PACS REBIO Arvoredo.
 
     """),
 
-    html.Br(), 
     html.Br(),
-    
+    html.Br(),
+
     html.H1("PROTOCOLO DE MONITORAMENTO",
             style={
     "marginTop": "20px",
@@ -49,17 +49,17 @@ methods_layout = html.Div([
 
     html.Br(),
     html.H3("""
-        Os dados de monitoramento são obtidos em localidades, onde é definido um segmento, e 
-        na extensão de um segmento são coletadas informações relacionadas a transectos visuais minuto a minuto de busca ativa. 
+        Os dados de monitoramento são obtidos em localidades, onde é definido um segmento, e
+        na extensão de um segmento são coletadas informações relacionadas a transectos visuais minuto a minuto de busca ativa.
 
     """),
     html.Br(),
 
     html.Figure([
-        html.Img(src="assets/img/segmento.png", 
-                 style={"width": "50%", 
-                        "margin": "30px auto", 
-                        "display": "block", 
+        html.Img(src="assets/img/segmento.png",
+                 style={"width": "50%",
+                        "margin": "30px auto",
+                        "display": "block",
                         "border-radius": "20px"}),
         html.Figcaption("Esquema de obtenção dos dados.(PACS Arvoredo)", style={
             "text-align": "center",
@@ -85,9 +85,9 @@ methods_layout = html.Div([
     """),
     html.Br(),
     html.H3("""
-            Na faixa de profundidade de zero a 2 metros do segmento de amostragem, o monitoramento e realizado por uma dupla de mergulhadores 
-            em snorkeling. O mergulhador fará uma busca ativa dentro dessa faixa de profundidade, procurando possíveis ocorrências de 
-            coral-sol ao longo de toda a extensão do segmento de amostragem. 
+            Na faixa de profundidade de zero a 2 metros do segmento de amostragem, o monitoramento e realizado por uma dupla de mergulhadores
+            em snorkeling. O mergulhador fará uma busca ativa dentro dessa faixa de profundidade, procurando possíveis ocorrências de
+            coral-sol ao longo de toda a extensão do segmento de amostragem.
     """),
     html.Br(),
     html.H2("""
@@ -95,9 +95,9 @@ methods_layout = html.Div([
     """),
     html.Br(),
     html.H3("""
-            As amostragens com mergulho autônomo são conduzidas por duas duplas. A área operacional para cada dupla e  
-            determinada por faixas de profundidade (por exemplo, de 2 a 8m e de 9 a 15m) ao longo do segmento de amostragem, visando cobrir 
-            a maior extensão vertical possível. A divisão das profundidades de varredura entre os pares pode variar dependendo das características 
+            As amostragens com mergulho autônomo são conduzidas por duas duplas. A área operacional para cada dupla e
+            determinada por faixas de profundidade (por exemplo, de 2 a 8m e de 9 a 15m) ao longo do segmento de amostragem, visando cobrir
+            a maior extensão vertical possível. A divisão das profundidades de varredura entre os pares pode variar dependendo das características
             batimétricas de cada segmento de amostragem.
 
     """),
@@ -105,10 +105,10 @@ methods_layout = html.Div([
     html.Br(),
 
     html.Figure([
-        html.Img(src="assets/img/monitora_dash.png", 
-                 style={"width": "50%", 
-                        "margin": "30px auto", 
-                        "display": "block", 
+        html.Img(src="assets/img/monitora_dash.png",
+                 style={"width": "50%",
+                        "margin": "30px auto",
+                        "display": "block",
                         "border-radius": "20px"}),
         html.Figcaption("Esquema operacional por batimetria no monitoramento.(PACS Arvoredo)", style={
             "text-align": "center",
@@ -121,7 +121,7 @@ methods_layout = html.Div([
     html.Br(),
     html.Br(),
 
-    html.H1("DAFOR", 
+    html.H1("DAFOR",
             style={
     "marginTop": "20px",
     "marginBottom": "10px",
@@ -132,8 +132,8 @@ methods_layout = html.Div([
     html.Br(),
 
     html.H3("""
-           Para classificar os níveis de invasão nos segmentos amostrados, utilizamos uma escala semi-quantitativa de abundância conhecida como escala DAFOR (Sutherland, 2006), 
-            especificamente adaptada para avaliar a abundância de coral-sol (Creed & Fleury, 2009). A cada transecto de 1 minuto é atribuída uma categoria  de abundância relativa, 
+           Para classificar os níveis de invasão nos segmentos amostrados, utilizamos uma escala semi-quantitativa de abundância conhecida como escala DAFOR (Sutherland, 2006),
+            especificamente adaptada para avaliar a abundância de coral-sol (Creed & Fleury, 2009). A cada transecto de 1 minuto é atribuída uma categoria  de abundância relativa,
             que são descritas da seguinte forma:
            """),
     html.Br(),
@@ -182,16 +182,16 @@ methods_layout = html.Div([
     html.Br(),
 
     html.H3("""
-            As observações realizadas na escala DAFOR são então convertidas para um índice de abundância relativa (IAR) usando a seguinte classificação: 
+            As observações realizadas na escala DAFOR são então convertidas para um índice de abundância relativa (IAR) usando a seguinte classificação:
            10 - dominante, 8 - abundante, 6 - frequente, 4 - ocasional, 2 - raro; zero - ausente. A ilustração abaixo mostra as categorias da escala DAFOR
               e seus respectivos valores de IAR.
-        
+
            """),
     html.Figure([
-        html.Img(src="assets/img/dafor_pt.png", 
-                 style={"width": "50%", 
-                        "margin": "30px auto", 
-                        "display": "block", 
+        html.Img(src="assets/img/dafor_pt.png",
+                 style={"width": "50%",
+                        "margin": "30px auto",
+                        "display": "block",
                         "border-radius": "20px"}),
         html.Figcaption("Escala DAFOR utilizada nos monitoramentos (Sergio Coelho, com. pess.; CREED, et al. 2025.)", style={
             "text-align": "center",
@@ -199,7 +199,7 @@ methods_layout = html.Div([
             "font-size": "1rem",
             "margin-top": "08px"
         })
-    ]),       
+    ]),
     html.Br(),
     html.Br(),
     html.H1("PROTOCOLO DE MANEJO",
@@ -214,7 +214,7 @@ methods_layout = html.Div([
     html.Br(),
      html.H3("""
           O manejo do coral-sol na REBIO Arvoredo tem como objetivo reduzir a população e conter sua dispersão,
-          buscando a erradicação pontual quando possível. As ações combinam estratégias de remoção em campo e 
+          buscando a erradicação pontual quando possível. As ações combinam estratégias de remoção em campo e
           registro padronizado das informações.
            """),
     html.Br(),
@@ -233,14 +233,14 @@ methods_layout = html.Div([
             html.H3("Manejo simples: Aplicado em áreas onde a erradicação não é viável, priorizando a retirada de colônias com maior potencial reprodutivo (colônias maiores que 15 pólipos.")
         ]),
         html.Br(),
-        
+
 ]),
 html.Ul([
         html.Li([
             html.H3("Manejo combinado: utilizado em locais com possibilidade de erradicação, envolvendo a remoção de todas as colônias (independentemente do tamanho), seguida da limpeza de resíduos com escova elétrica rotativa."),
         ]),
         html.Br(),
-        
+
 ]),
     html.Br(),
     html.Br(),
@@ -254,18 +254,18 @@ html.Ul([
     html.Br(),
     html.Br(),
      html.H3("""
-          São empregados marteletes pneumáticos ou elétricos para remoção em áreas densamente colonizadas, e marreta, talhadeira ou formão em situações 
-          que exigem maior precisão ou quando há restrições ao uso de ferramentas motorizadas. A escova rotativa é usada para eliminar resíduos após a remoção. 
+          São empregados marteletes pneumáticos ou elétricos para remoção em áreas densamente colonizadas, e marreta, talhadeira ou formão em situações
+          que exigem maior precisão ou quando há restrições ao uso de ferramentas motorizadas. A escova rotativa é usada para eliminar resíduos após a remoção.
           O material retirado deve ser recolhido com puçás ou sacos de coleta para evitar a dispersão de fragmentos.
            """),
     html.Br(),
-    html.Br(),       
+    html.Br(),
 
     html.Figure([
-        html.Img(src="assets/img/manejo.png", 
-                 style={"width": "50%", 
-                        "margin": "30px auto", 
-                        "display": "block", 
+        html.Img(src="assets/img/manejo.png",
+                 style={"width": "50%",
+                        "margin": "30px auto",
+                        "display": "block",
                         "border-radius": "20px"}),
         html.Figcaption("Manejo realizado com talhadeira e marreta (PACS Arvoredo)", style={
             "text-align": "center",
@@ -288,8 +288,8 @@ html.Ul([
     html.Br(),
 
     html.H3("""
-             
-            Alguns indicadores foram desenvolvidos para avaliação das ações de monitoramento e manejo da invasão do coral-sol na 
+
+            Alguns indicadores foram desenvolvidos para avaliação das ações de monitoramento e manejo da invasão do coral-sol na
             REBIO Arvoredo e entorno. Os indicadores são calculados e apresentados condicionados aos filtros de período e localidade selecionados no dashboard.
             Abaixo exploramos cada um dos indicadores desenvolvidos:
 
@@ -306,7 +306,7 @@ html.Ul([
             html.H3("Índice de Abundância Relativa (IAR-DAFOR)"),
             "Este indicador é derivado da escala DAFOR, que classifica a abundância do coral-sol em categorias qualitativas (Dominante, Abundante, Frequente, Ocasional, Raro, Ausente)."
             "Para cada categoria é atribuída a um valor numérico específico. Nos gráficos, o IAR-DAFOR é representado pela soma dos valores de IAR (Índice de Abundância Relativa) por localidade. "
-            "Também é possível observar a distribuição das categorias DAFOR por uma ou mais localidades." 
+            "Também é possível observar a distribuição das categorias DAFOR por uma ou mais localidades."
         ]),
 
         html.Br(),
@@ -343,10 +343,10 @@ html.Ul([
             "e o tipo da geomorfologia em que a ocorrência foi registrada (toca ou Caverna, lage, matacão ou paredão ou rochas médias e pequenas)"
         ]),
          html.Figure([
-    html.Img(src="assets/img/occ_pic.png", 
-             style={"width": "40%", 
-                    "margin": "30px auto", 
-                    "display": "block", 
+    html.Img(src="assets/img/occ_pic.png",
+             style={"width": "40%",
+                    "margin": "30px auto",
+                    "display": "block",
                     "border-radius": "20px"}),
     html.Figcaption("Foto das ocorrências de coral-sol inseridas no Banco de Dados", style={
         "text-align": "center",
@@ -408,7 +408,7 @@ html.Ul([
         html.Li("SUTHERLAND, W.J. 2006. Ecological Census Techniques: A Handbook. 2nd edition. Cambridge University Press, Cambridge, UK."),
     ]),
     html.Br(),
-          
+
     html.H1("*PACS ARVOREDO",
             style={
     "marginTop": "20px",
@@ -418,11 +418,11 @@ html.Ul([
     }),
     html.Br(),
     html.P("""
-        O PACS Arvoredo (Plano de Ação para Prevenção e Controle do Coral-sol na REBIO Arvoredo e Entorno) é uma condicionante da Licença de Operação nº 1587/2020 emitida pelo IBAMA em 08/07/2020 referente ao Sistema de 
-        Desenvolvimento da Produção de Petróleo do Campo de Baúna, localizado na Bacia de Santos, sob concessão da Karoon Energy e tem como principal objetivo gerar conhecimento científico sobre a espécie 
+        O PACS Arvoredo (Plano de Ação para Prevenção e Controle do Coral-sol na REBIO Arvoredo e Entorno) é uma condicionante da Licença de Operação nº 1587/2020 emitida pelo IBAMA em 08/07/2020 referente ao Sistema de
+        Desenvolvimento da Produção de Petróleo do Campo de Baúna, localizado na Bacia de Santos, sob concessão da Karoon Energy e tem como principal objetivo gerar conhecimento científico sobre a espécie
         Tubastraea coccinea (coral-sol) e o desenvolvimento de ferramentas e técnicas para a prevenção e controle desta espécie na REBIO Arvoredo e entorno.
            """),
-    html.Br(),       
+    html.Br(),
 
     html.H1("CONTATO",
             style={
@@ -431,19 +431,27 @@ html.Ul([
     "borderBottom": "2px solid #2a7ae2",
     "paddingBottom": "5px"
     }),
-    html.Br(),      
-    html.P("""
-        Para dúvidas, sugestões, relatos de erros ou mais informações sobre o dashboard e os dados de monitoramento e manejo do coral-sol: 
-                   """),  
-        html.P("""Thiago C. L. Silveira - silveira.tcl at gmail.com
-               """),             
-        html.P("""
-         Relatos de ocorrências de coral-sol podem ser enviados para o ICMBio - NGI Florianópolis: 
-                   """),      
-        html.P("""ngi.florianopolis at icmbio.gov.br 
-               """),                        
     html.Br(),
-    html.Br(),                
+    html.P("""
+        Para dúvidas, sugestões, relatos de erros ou mais informações sobre o dashboard e os dados de monitoramento e manejo do coral-sol:
+                   """),
+        html.P("""Thiago C. L. Silveira - silveira.tcl at gmail.com
+               """),
+        html.P([
+            "Website: ",
+            html.A(
+                "https://silveiratcl.github.io/site/",
+                href="https://silveiratcl.github.io/site/",
+                target="_blank"
+            )
+        ]),
+        html.P("""
+         Relatos de ocorrências de coral-sol podem ser enviados para o ICMBio - NGI Florianópolis:
+                   """),
+        html.P("""ngi.florianopolis at icmbio.gov.br
+               """),
+    html.Br(),
+    html.Br(),
 
 
 
