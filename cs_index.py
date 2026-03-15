@@ -15,7 +15,7 @@ from cs_map import (
     build_monitoring_density_map_figure,
     build_monitoring_events_map_figure,
     build_monitoring_line_density_map_figure,
-)    
+)
 
 from cs_controllers import cs_controls, REBIO_LOCALITIES, REBIO_ENTORNO_LOCALITIES, REBIO_SEM_LILI_ENTORNO_LOCALITIES
 from services.data_service import CoralDataService
@@ -30,12 +30,12 @@ from cs_histogram import (
     build_dafor_histogram_figure,
     build_dafor_sum_bar_figure,
     build_accumulated_mass_year_figure,
-    build_days_since_management_bar_figure,  
+    build_days_since_management_bar_figure,
     build_days_since_monitoring_bar_figure,
     build_removal_ratio_year_figure,
     build_monitoring_events_bar_figure,
     build_monitoring_events_histogram_figure,
-) 
+)
 from cs_tables import build_occurrences_table
 from cs_methods import methods_layout  # Your text tab layout
 from cs_report import get_report_layout  # Real-time report tab
@@ -57,7 +57,7 @@ app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP],
            title="Coral-Sol Dashboard" )
 server = app.server
 
-# Define dashboard_layout 
+# Define dashboard_layout
 dashboard_layout = html.Div([
     html.Div(dcc.Loading(dcc.Graph(id="cs-map-graph", config={'scrollZoom': True}), type="circle"), id="div-map"),
     html.Div(dcc.Loading(dcc.Graph(id="cs-histogram-graph"), type="circle"), id="div-hist"),
@@ -109,7 +109,7 @@ app.layout = dbc.Container(
     ]
 )
             ], md=9),
-            
+
         ]),
         modal # <--  modal here, outside the Row so it overlays the whole page
     ],
@@ -146,7 +146,7 @@ def toggle_date_picker(time_range):
         Output("div-dafor-hist", "style"),
         Output("div-dafor-sum-bar", "style"),
         Output("div-line", "style"),
-        Output("div-removal-ratio", "style"),  
+        Output("div-removal-ratio", "style"),
         Output("occurrences-table-container", "children"),
     ],
     [
@@ -161,10 +161,10 @@ def toggle_date_picker(time_range):
 
 def update_visuals(indicator, selected_localities, time_range, custom_start_date, custom_end_date, boundary_toggle):
     service = CoralDataService()
-    
+
     # Convert boundary toggle from list to boolean
     show_boundary = "show_boundary" in (boundary_toggle or [])
-    
+
     # Calculate dates based on time range selection
     if time_range == "all":
         start_date = None
@@ -212,7 +212,7 @@ def update_visuals(indicator, selected_localities, time_range, custom_start_date
     fig_dafor_hist = go.Figure()
     fig_dafor_sum_bar = go.Figure()
     fig_line = go.Figure()
-    fig_removal_ratio = go.Figure()  
+    fig_removal_ratio = go.Figure()
 
     # Default: show all
     style_hide = {'display': 'none'}
@@ -221,7 +221,7 @@ def update_visuals(indicator, selected_localities, time_range, custom_start_date
     # Default styles for charts
     hist_style = bar_style = dafor_hist_style = dafor_sum_bar_style = style_hide
     line_style = style_hide
-   
+
     occurrences_table = None  # <--- Add this line
 
     if indicator == "dpue":
@@ -237,7 +237,7 @@ def update_visuals(indicator, selected_localities, time_range, custom_start_date
         dafor_hist_style = style_hide
         dafor_sum_bar_style = style_hide
         removal_ratio_style = style_hide
-        
+
 
     elif indicator == "dafor":
         # Get DAFOR sum per locality (for bar and map)
@@ -275,12 +275,12 @@ def update_visuals(indicator, selected_localities, time_range, custom_start_date
         raiw_df = service.get_raiw_by_locality(start_date, end_date)
         if selected_localities:
             raiw_df = raiw_df[raiw_df['locality_id'].isin(selected_localities)]
-        
+
         # Build visualizations
         fig_map = build_raiw_map_figure(raiw_df, show_boundary)
         fig_hist = build_raiw_histogram_figure(raiw_df)
         fig_bar = build_raiw_bar_figure(raiw_df)
-        
+
         # Show histogram and bar, hide dafor-specific charts
         hist_style = style_show
         bar_style = style_show
@@ -293,10 +293,10 @@ def update_visuals(indicator, selected_localities, time_range, custom_start_date
         segments_df = service.get_dafor_spatial_data(start_date, end_date)
         if selected_localities:
             segments_df = segments_df[segments_df['locality_id'].isin(selected_localities)]
-        
+
         # Build spatial heat map
         fig_map = build_dafor_spatial_map_figure(segments_df, show_boundary)
-        
+
         # Hide all charts - only show map for spatial visualization
         fig_hist = go.Figure()
         fig_bar = go.Figure()
@@ -304,7 +304,7 @@ def update_visuals(indicator, selected_localities, time_range, custom_start_date
         fig_dafor_sum_bar = go.Figure()
         fig_line = go.Figure()
         fig_removal_ratio = go.Figure()
-        
+
         hist_style = style_hide
         bar_style = style_hide
         dafor_hist_style = style_hide
@@ -373,7 +373,7 @@ def update_visuals(indicator, selected_localities, time_range, custom_start_date
         dafor_hist_style = style_hide
         dafor_sum_bar_style = style_hide
         removal_ratio_style = style_hide
-   
+
     elif indicator == "days_since_monitoring":
         df_days_since = service.get_days_since_last_monitoring(start_date, end_date)
         # debug print
@@ -396,31 +396,31 @@ def update_visuals(indicator, selected_localities, time_range, custom_start_date
         dafor_hist_style = style_hide
         dafor_sum_bar_style = style_hide
         removal_ratio_style = style_hide
-    
+
     elif indicator == "monitoring_intensity":
         # Get monitoring events data
         events_df = service.get_monitoring_events_by_locality(start_date, end_date)
         if selected_localities:
             events_df = events_df[events_df['locality_id'].isin(selected_localities)]
-        
+
         # Build visualizations with line-based density map
         fig_map = build_monitoring_line_density_map_figure(service, start_date, end_date, selected_localities, None, show_boundary)
         fig_bar = build_monitoring_events_bar_figure(events_df)
         fig_hist = build_monitoring_events_histogram_figure(events_df)
-        
+
         # Hide other charts
         fig_dafor_hist = go.Figure()
         fig_dafor_sum_bar = go.Figure()
         fig_line = go.Figure()
         fig_removal_ratio = go.Figure()
-        
+
         hist_style = style_show
         bar_style = style_show
         dafor_hist_style = style_hide
         dafor_sum_bar_style = style_hide
         line_style = style_hide
         removal_ratio_style = style_hide
-    
+
     else:
         hist_style = bar_style = dafor_hist_style = dafor_sum_bar_style = style_hide
 
@@ -429,7 +429,7 @@ def update_visuals(indicator, selected_localities, time_range, custom_start_date
         hist_style, bar_style, dafor_hist_style, dafor_sum_bar_style, line_style, removal_ratio_style,
         occurrences_table
     )
-    
+
 
 
 
@@ -450,7 +450,7 @@ def display_modal(clickData, n_close, is_open, current_indicator):
         # Only open modal if we're viewing occurrences
         if current_indicator != "occurrences":
             return False, no_update
-        
+
         point = clickData["points"][0]
         lat = point["lat"]
         lon = point["lon"]
@@ -524,7 +524,7 @@ app.layout = dbc.Container(
     ]
 )
             ], md=9),
-            
+
         ]),
         modal,  # <--  modal here, outside the Row so it overlays the whole page
     ],
@@ -547,7 +547,7 @@ app.layout = dbc.Container(
 )
 def update_metrics(indicator, selected_localities, time_range, custom_start_date, custom_end_date):
     service = CoralDataService()
-    
+
     # Calculate dates based on time range selection (same logic as main callback)
     if time_range == "all":
         start_date = None
@@ -568,7 +568,7 @@ def update_metrics(indicator, selected_localities, time_range, custom_start_date
         # Default to all time
         start_date = None
         end_date = None
-    
+
     # Get data with calculated dates
     df_management = service.get_management_data(start_date, end_date)
     total_mass = df_management["managed_mass_kg"].sum() if not df_management.empty else 0
@@ -581,11 +581,15 @@ from dash.dependencies import Input, Output
 
 @app.callback(
     Output("main-tabs", "value"),
-    Input("back-to-dashboard-btn", "n_clicks"),
+    [
+        Input("back-to-dashboard-btn", "n_clicks"),
+        Input("back-to-dashboard-report-btn", "n_clicks"),
+    ],
     prevent_initial_call=True
 )
-def go_back_to_dashboard(n_clicks):
-    if n_clicks:
+def go_back_to_dashboard(n_clicks_methods, n_clicks_report):
+    triggered = ctx.triggered_id
+    if triggered in ("back-to-dashboard-btn", "back-to-dashboard-report-btn"):
         return "dashboard"
     return dash.no_update
 
@@ -624,7 +628,7 @@ def update_report_summary(selected_localities, time_range, custom_start_date, cu
     total_management_kg = management_data['managed_mass_kg'].sum() if not management_data.empty else 0
     total_occurrences = len(occurrences_data) if not occurrences_data.empty else 0
     avg_dpue = dpue_data['DPUE'].mean() if not dpue_data.empty else 0
-    
+
     return (
         str(total_localities),
         f"{total_management_kg:.1f} kg",
