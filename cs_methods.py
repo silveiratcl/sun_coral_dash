@@ -444,7 +444,7 @@ html.Ul([
             html.Br(),
             "ICMBio NGI Florianópolis",
             html.Br(),
-            "E-mail: ngi.florianopolis@icmbio.gov.br",
+            "E-mail: ngi.florianopolis aticmbio.gov.br",
         ], style={"marginBottom": "0", "lineHeight": "1.7"}),
     ], style={
         "padding": "0"
