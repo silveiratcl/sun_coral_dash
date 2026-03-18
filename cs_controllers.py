@@ -141,7 +141,7 @@ cs_controls = dbc.Row([
         value=[],  # Empty by default (boundary hidden)
         style={"margin-bottom": "20px"}
     ),
-])
+], className="left-filters")
 
 def filter_localities(selected_localities, df):
     if selected_localities is None or 0 in selected_localities:

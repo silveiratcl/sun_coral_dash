@@ -457,10 +457,11 @@ html.Ul([
         "opacity": "1"
     }),
     html.Div([
-        html.Img(src="assets/logo.png", style={"maxHeight": "72px", "width": "auto", "maxWidth": "180px"}),
+        html.Img(src="assets/logo.png", style={"maxHeight": "82px", "width": "auto", "maxWidth": "180px"}),
         html.Img(src="assets/img/labar.png", style={"maxHeight": "72px", "width": "auto", "maxWidth": "180px"}),
         html.Img(src="assets/img/labsub.png", style={"maxHeight": "72px", "width": "auto", "maxWidth": "180px"}),
         html.Img(src="assets/img/ufsc.png", style={"maxHeight": "72px", "width": "auto", "maxWidth": "180px"}),
+        html.Img(src="assets/img/feesc.png", style={"maxHeight": "72px", "width": "auto", "maxWidth": "180px"}),
         html.Img(src="assets/img/icmbio.png", style={"maxHeight": "72px", "width": "auto", "maxWidth": "180px"}),
     ], style={
         "padding": "16px 0 24px 0",
