@@ -457,12 +457,21 @@ html.Ul([
         "opacity": "1"
     }),
     html.Div([
-        html.Img(src="assets/logo.png", style={"maxHeight": "82px", "width": "auto", "maxWidth": "180px"}),
-        html.Img(src="assets/img/labar.png", style={"maxHeight": "72px", "width": "auto", "maxWidth": "180px"}),
-        html.Img(src="assets/img/labsub.png", style={"maxHeight": "72px", "width": "auto", "maxWidth": "180px"}),
-        html.Img(src="assets/img/ufsc.png", style={"maxHeight": "72px", "width": "auto", "maxWidth": "180px"}),
-        html.Img(src="assets/img/feesc.png", style={"maxHeight": "72px", "width": "auto", "maxWidth": "180px"}),
-        html.Img(src="assets/img/icmbio.png", style={"maxHeight": "72px", "width": "auto", "maxWidth": "180px"}),
+        html.Img(src="assets/img/pacs.png", style={"maxHeight": "72px", "width": "auto", "maxWidth": "180px"}),
+        html.A(html.Img(src="assets/img/labar.png", style={"maxHeight": "72px", "width": "auto", "maxWidth": "180px"}),
+               href="https://labarufsc.weebly.com/", target="_blank"),
+        html.A(html.Img(src="assets/img/labsub.png", style={"maxHeight": "72px", "width": "auto", "maxWidth": "180px"}),
+               href="https://lasub.ufsc.br/", target="_blank"),
+        html.A(html.Img(src="assets/img/ufsc.png", style={"maxHeight": "72px", "width": "auto", "maxWidth": "180px"}),
+               href="https://www.ufsc.br/", target="_blank"),
+        html.A(html.Img(src="assets/img/feesc.png", style={"maxHeight": "72px", "width": "auto", "maxWidth": "180px"}),
+               href="https://www.feesc.org.br/site/", target="_blank"),
+        html.A(html.Img(src="assets/img/horus.png", style={"maxHeight": "72px", "width": "auto", "maxWidth": "180px"}),
+               href="https://institutohorus.org.br/", target="_blank"),
+        html.A(html.Img(src="assets/img/icmbio_br.png", style={"maxHeight": "72px", "width": "auto", "maxWidth": "180px"}),
+               href="https://www.gov.br/icmbio/pt-br", target="_blank")
+
+
     ], style={
         "padding": "16px 0 24px 0",
         "display": "flex",
