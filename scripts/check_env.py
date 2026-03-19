@@ -6,9 +6,19 @@ import re
 import sys
 
 
+def _read_text(path: Path) -> str:
+    raw = path.read_bytes()
+    for enc in ("utf-8-sig", "utf-16", "utf-8", "latin-1"):
+        try:
+            return raw.decode(enc)
+        except (UnicodeDecodeError, ValueError):
+            continue
+    return raw.decode("latin-1")
+
+
 def parse_requirements(path: Path) -> dict[str, str]:
     reqs: dict[str, str] = {}
-    for raw in path.read_text(encoding="utf-8").splitlines():
+    for raw in _read_text(path).splitlines():
         line = raw.strip()
         if not line or line.startswith("#"):
             continue
