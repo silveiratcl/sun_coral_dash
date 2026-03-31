@@ -185,25 +185,34 @@ def create_locality_ranking_chart():
     if dpue_data.empty:
         return go.Figure()
 
-    # Sort by DPUE descending
-    top_localities = dpue_data.nlargest(15, 'DPUE')
+    dpue_data = dpue_data.copy()
+    dpue_data['DPUE'] = pd.to_numeric(dpue_data['DPUE'], errors='coerce')
+    # Keep only positive localities and sort by DPUE descending
+    positive_localities = dpue_data[dpue_data['DPUE'] > 0].sort_values('DPUE', ascending=False)
+
+    if positive_localities.empty:
+        return go.Figure().update_layout(
+            title="Sem localidades com DPUE positivo",
+            height=400,
+            template='plotly_white'
+        )
 
     fig = go.Figure(go.Bar(
-        x=top_localities['DPUE'],
-        y=top_localities['name'],
+        x=positive_localities['DPUE'],
+        y=positive_localities['name'],
         orientation='h',
         marker=dict(
-            color=top_localities['DPUE'],
+            color=positive_localities['DPUE'],
             colorscale='RdYlGn_r',
             showscale=True,
             colorbar=dict(title="DPUE")
         ),
-        text=top_localities['DPUE'].round(2),
+        text=positive_localities['DPUE'].round(2),
         textposition='auto',
     ))
 
     fig.update_layout(
-        title="Top 15 Localidades por DPUE (Todas as Datas)",
+        title="Ranking de Localidades com DPUE Positivo (Todas as Datas)",
         xaxis_title="DPUE (Detecções por Unidade de Esforço)",
         yaxis_title="Localidade",
         height=600,
@@ -626,29 +635,14 @@ def create_raiw_by_year_chart():
 
     dafor_data[['weight_sum', 'Nmin']] = dafor_data['dafor_value'].apply(_compute_weight_and_minutes)
 
-    dafor_data['Nhours'] = dafor_data['Nmin'] / 60
-    dafor_data['denominator'] = dafor_data['Nhours'] * dafor_data['Uni100m']
-
-    # Guard against zero/invalid effort normalization denominators
-    dafor_data = dafor_data[
-        dafor_data['denominator'].notna() &
-        (dafor_data['denominator'] > 0)
-    ]
-
-    if dafor_data.empty:
-        return go.Figure().update_layout(
-            title="Sem dados válidos para cálculo de IAR-P/RAI-W",
-            height=450,
-        )
-
     yearly_raiw = dafor_data.groupby('year').agg(
         weight_sum=('weight_sum', 'sum'),
-        denominator=('denominator', 'sum'),
         nmin=('Nmin', 'sum'),
     ).reset_index().sort_values('year')
 
-    yearly_raiw = yearly_raiw[yearly_raiw['denominator'] > 0]
-    yearly_raiw['RAIW'] = yearly_raiw['weight_sum'] / yearly_raiw['denominator']
+    yearly_raiw = yearly_raiw[yearly_raiw['nmin'] > 0]
+    # Keep the same 0-10 method used in Dashboard.
+    yearly_raiw['RAIW'] = (10 * (yearly_raiw['weight_sum'] / yearly_raiw['nmin'])).clip(lower=0, upper=10)
 
     if yearly_raiw.empty:
         return go.Figure().update_layout(
@@ -664,15 +658,13 @@ def create_raiw_by_year_chart():
         textposition='outside',
         customdata=np.column_stack([
             yearly_raiw['weight_sum'].round(2),
-            yearly_raiw['denominator'].round(2),
             yearly_raiw['nmin'].astype(int),
         ]),
         hovertemplate=(
             '<b>Ano: %{x}</b><br>' +
             'IAR-P/RAI-W: %{y:.3f}<br>' +
             'Soma dos pesos: %{customdata[0]}<br>' +
-            'Denominador padronizado: %{customdata[1]}<br>' +
-            'Minutos monitorados: %{customdata[2]}<extra></extra>'
+            'Minutos monitorados: %{customdata[1]}<extra></extra>'
         )
     ))
 
@@ -752,7 +744,7 @@ def create_raiw_by_locality_chart():
 
 
 def create_removal_rate_per_day_chart():
-    """Create stacked bar chart showing coral mass removal rate per management day per year by method for REBIO + Entorno."""
+    """Create bar chart showing coral mass removal rate per management day by year for REBIO + Entorno."""
     service = CoralDataService()
 
     # Get REBIO + Entorno locality IDs
@@ -782,56 +774,36 @@ def create_removal_rate_per_day_chart():
     management_data['year'] = management_data['date'].dt.year
     management_data['date_only'] = management_data['date'].dt.date
 
-    # Standardize method names to handle variations in capitalization
-    management_data['method'] = management_data['method'].str.strip()
+    management_data['managed_mass_kg'] = pd.to_numeric(management_data['managed_mass_kg'], errors='coerce')
+    management_data = management_data[management_data['managed_mass_kg'] > 0]
 
-    # Group by year, method, and calculate metrics
-    yearly_method_stats = management_data.groupby(['year', 'method']).agg({
-        'managed_mass_kg': 'sum',
-        'date_only': 'nunique'
-    }).reset_index()
+    yearly_stats = management_data.groupby('year', as_index=False).agg(
+        total_mass_kg=('managed_mass_kg', 'sum'),
+        unique_days=('date_only', 'nunique')
+    )
+    yearly_stats = yearly_stats[yearly_stats['unique_days'] > 0]
+    yearly_stats['kg_per_day'] = (yearly_stats['total_mass_kg'] / yearly_stats['unique_days']).round(2)
 
-    yearly_method_stats.columns = ['year', 'method', 'total_mass_kg', 'unique_days']
-
-    # Calculate removal rate: kg per management day for each method
-    yearly_method_stats['kg_per_day'] = (yearly_method_stats['total_mass_kg'] /
-                                          yearly_method_stats['unique_days']).round(2)
-
-    # Pivot to get methods as columns
-    pivot_data = yearly_method_stats.pivot(index='year', columns='method', values='kg_per_day').fillna(0)
-
-    # Create figure with stacked bars
-    fig = go.Figure()
-
-    # Define colors and order for methods
-    method_colors = {
-        'Manual': '#3498db',              # Blue
-        'Manual e Mecanizado': '#f39c12', # Orange
-        'Mecanizado': '#e74c3c'           # Red
-    }
-
-    method_order = ['Manual', 'Manual e Mecanizado', 'Mecanizado']
-
-    # Add traces for each method
-    for method in method_order:
-        if method in pivot_data.columns:
-            fig.add_trace(go.Bar(
-                x=pivot_data.index,
-                y=pivot_data[method],
-                name=method,
-                marker_color=method_colors.get(method, '#95a5a6'),
-                text=pivot_data[method].round(1),
-                textposition='inside',
-                textfont=dict(size=11, color='white'),
-                hovertemplate=(
-                    '<b>Ano: %{x}</b><br>' +
-                    f'{method}: %{{y:.2f}} kg/dia<br>' +
-                    '<extra></extra>'
-                )
-            ))
+    fig = go.Figure(go.Bar(
+        x=yearly_stats['year'],
+        y=yearly_stats['kg_per_day'],
+        marker_color='#3498db',
+        text=yearly_stats['kg_per_day'].round(1),
+        textposition='outside',
+        customdata=np.column_stack([
+            yearly_stats['total_mass_kg'].round(2),
+            yearly_stats['unique_days'].astype(int)
+        ]),
+        hovertemplate=(
+            '<b>Ano: %{x}</b><br>' +
+            'Massa por dia: %{y:.2f} kg/dia<br>' +
+            'Massa total: %{customdata[0]} kg<br>' +
+            'Dias de manejo: %{customdata[1]}<extra></extra>'
+        )
+    ))
 
     fig.update_layout(
-        title="Razão de Remoção de Massa de Coral por Dia de Manejo por Ano por Método<br><sub>REBIO Arvoredo + Entorno Imediato</sub>",
+        title="Razão de Remoção de Massa de Coral por Dia de Manejo por Ano<br><sub>REBIO Arvoredo + Entorno Imediato</sub>",
         xaxis=dict(
             title="Ano",
             dtick=1
@@ -839,25 +811,16 @@ def create_removal_rate_per_day_chart():
         yaxis=dict(
             title="Massa Removida por Dia de Manejo (kg/dia)"
         ),
-        barmode='stack',
         height=500,
         template='plotly_white',
-        hovermode='x unified',
-        legend=dict(
-            title="Método",
-            orientation="v",
-            yanchor="top",
-            y=1,
-            xanchor="right",
-            x=1.15
-        )
+        hovermode='x unified'
     )
 
     return fig
 
 
 def create_total_mass_by_locality_method_chart():
-    """Create stacked horizontal bar chart showing total managed mass by locality split by method for REBIO + Entorno."""
+    """Create horizontal bar chart showing total managed mass by locality for REBIO + Entorno."""
     service = CoralDataService()
 
     # Keep scope aligned with the other management outputs
@@ -883,19 +846,6 @@ def create_total_mass_by_locality_method_chart():
             height=450
         )
 
-    # Normalize method names to avoid split categories due to spelling/case variations
-    def normalize_method(method_value):
-        text = str(method_value).strip().lower()
-        if 'manual' in text and 'mecan' in text:
-            return 'Manual e Mecanizado'
-        if 'mecan' in text:
-            return 'Mecanizado'
-        if 'manual' in text:
-            return 'Manual'
-        return str(method_value).strip() or 'Não informado'
-
-    management_data['method'] = management_data['method'].apply(normalize_method)
-
     # Add locality names
     locality_lookup = locality_data[['locality_id', 'name']].copy()
     management_data = management_data.merge(locality_lookup, on='locality_id', how='left')
@@ -903,63 +853,33 @@ def create_total_mass_by_locality_method_chart():
         management_data['locality_id'].apply(lambda x: f"Localidade {x}")
     )
 
-    locality_method_mass = management_data.groupby(['name', 'method'], as_index=False)['managed_mass_kg'].sum()
+    locality_mass = management_data.groupby('name', as_index=False)['managed_mass_kg'].sum()
 
-    if locality_method_mass.empty:
+    if locality_mass.empty:
         return go.Figure().update_layout(
             title="Sem dados agregados de manejo por localidade",
             height=450
         )
 
-    pivot_data = locality_method_mass.pivot(index='name', columns='method', values='managed_mass_kg').fillna(0)
+    locality_mass = locality_mass.sort_values('managed_mass_kg', ascending=False)
 
-    # Order localities by total managed mass (descending)
-    pivot_data['__total__'] = pivot_data.sum(axis=1)
-    pivot_data = pivot_data.sort_values('__total__', ascending=False)
-
-    fig = go.Figure()
-
-    method_colors = {
-        'Manual': '#3498db',
-        'Manual e Mecanizado': '#f39c12',
-        'Mecanizado': '#e74c3c',
-    }
-
-    preferred_order = ['Manual', 'Manual e Mecanizado', 'Mecanizado']
-    extra_methods = [m for m in pivot_data.columns if m not in preferred_order + ['__total__']]
-    method_order = preferred_order + sorted(extra_methods)
-
-    for method in method_order:
-        if method in pivot_data.columns:
-            fig.add_trace(go.Bar(
-                y=pivot_data.index,
-                x=pivot_data[method],
-                orientation='h',
-                name=method,
-                marker_color=method_colors.get(method, '#95a5a6'),
-                hovertemplate=(
-                    '<b>%{y}</b><br>' +
-                    f'{method}: %{{x:.2f}} kg<br>' +
-                    '<extra></extra>'
-                )
-            ))
+    fig = go.Figure(go.Bar(
+        y=locality_mass['name'],
+        x=locality_mass['managed_mass_kg'],
+        orientation='h',
+        marker_color='#2ca02c',
+        text=locality_mass['managed_mass_kg'].round(1),
+        textposition='outside',
+        hovertemplate='<b>%{y}</b><br>Massa total: %{x:.2f} kg<extra></extra>'
+    ))
 
     fig.update_layout(
-        title='Massa Manejada Total por Localidade por Método<br><sub>REBIO Arvoredo + Entorno Imediato</sub>',
+        title='Massa Manejada Total por Localidade<br><sub>REBIO Arvoredo + Entorno Imediato</sub>',
         xaxis=dict(title='Massa Manejada Total (kg)'),
         yaxis=dict(title='Localidade', autorange='reversed'),
-        barmode='stack',
-        height=max(500, 240 + (len(pivot_data.index) * 28)),
+        height=max(500, 240 + (len(locality_mass.index) * 28)),
         template='plotly_white',
         hovermode='y unified',
-        legend=dict(
-            title='Método',
-            orientation='v',
-            yanchor='top',
-            y=1,
-            xanchor='right',
-            x=1.15
-        ),
         margin=dict(l=10, r=10, t=80, b=50)
     )
 
@@ -967,7 +887,7 @@ def create_total_mass_by_locality_method_chart():
 
 
 def create_mass_per_cylinder_chart():
-    """Create stacked bar chart showing managed mass per cylinder by year and method for REBIO + Entorno."""
+    """Create bar chart showing managed mass per cylinder by year for REBIO + Entorno."""
     service = CoralDataService()
 
     # Get REBIO + Entorno locality IDs
@@ -1012,54 +932,35 @@ def create_mass_per_cylinder_chart():
             height=400
         )
 
-    # Standardize method names to handle variations in capitalization
-    management_data['method'] = management_data['method'].str.strip()
+    yearly_stats = management_data.groupby('year', as_index=False).agg(
+        managed_mass_kg=('managed_mass_kg', 'sum'),
+        number_of_cylinders=('number_of_cylinders', 'sum')
+    )
+    yearly_stats = yearly_stats[yearly_stats['number_of_cylinders'] > 0]
+    yearly_stats['kg_per_cylinder'] = (
+        yearly_stats['managed_mass_kg'] / yearly_stats['number_of_cylinders']
+    ).round(2)
 
-    # Group by year, method and calculate metrics
-    yearly_method_stats = management_data.groupby(['year', 'method']).agg({
-        'managed_mass_kg': 'sum',
-        'number_of_cylinders': 'sum'
-    }).reset_index()
-
-    # Calculate mass per cylinder for each method
-    yearly_method_stats['kg_per_cylinder'] = (yearly_method_stats['managed_mass_kg'] /
-                                               yearly_method_stats['number_of_cylinders']).round(2)
-
-    # Pivot to get methods as columns
-    pivot_data = yearly_method_stats.pivot(index='year', columns='method', values='kg_per_cylinder').fillna(0)
-
-    # Create figure with stacked bars
-    fig = go.Figure()
-
-    # Define colors and order for methods
-    method_colors = {
-        'Manual': '#3498db',              # Blue
-        'Manual e Mecanizado': '#f39c12', # Orange
-        'Mecanizado': '#e74c3c'           # Red
-    }
-
-    method_order = ['Manual', 'Manual e Mecanizado', 'Mecanizado']
-
-    # Add traces for each method
-    for method in method_order:
-        if method in pivot_data.columns:
-            fig.add_trace(go.Bar(
-                x=pivot_data.index,
-                y=pivot_data[method],
-                name=method,
-                marker_color=method_colors.get(method, '#95a5a6'),
-                text=pivot_data[method].round(1),
-                textposition='inside',
-                textfont=dict(size=11, color='white'),
-                hovertemplate=(
-                    '<b>Ano: %{x}</b><br>' +
-                    f'{method}: %{{y:.2f}} kg/cilindro<br>' +
-                    '<extra></extra>'
-                )
-            ))
+    fig = go.Figure(go.Bar(
+        x=yearly_stats['year'],
+        y=yearly_stats['kg_per_cylinder'],
+        marker_color='#8e44ad',
+        text=yearly_stats['kg_per_cylinder'].round(1),
+        textposition='outside',
+        customdata=np.column_stack([
+            yearly_stats['managed_mass_kg'].round(2),
+            yearly_stats['number_of_cylinders'].round(0)
+        ]),
+        hovertemplate=(
+            '<b>Ano: %{x}</b><br>' +
+            'Massa por cilindro: %{y:.2f} kg/cilindro<br>' +
+            'Massa total: %{customdata[0]} kg<br>' +
+            'Cilindros: %{customdata[1]}<extra></extra>'
+        )
+    ))
 
     fig.update_layout(
-        title="Massa Manejada por Cilindro Utilizado por Ano por Método<br><sub>REBIO Arvoredo + Entorno Imediato</sub>",
+        title="Massa Manejada por Cilindro Utilizado por Ano<br><sub>REBIO Arvoredo + Entorno Imediato</sub>",
         xaxis=dict(
             title="Ano",
             dtick=1
@@ -1067,18 +968,9 @@ def create_mass_per_cylinder_chart():
         yaxis=dict(
             title="Massa por Cilindro (kg/cilindro)"
         ),
-        barmode='stack',
         height=500,
         template='plotly_white',
-        hovermode='x unified',
-        legend=dict(
-            title="Método",
-            orientation="v",
-            yanchor="top",
-            y=1,
-            xanchor="right",
-            x=1.15
-        )
+        hovermode='x unified'
     )
 
     return fig
@@ -1142,7 +1034,7 @@ def get_report_layout():
         html.Hr(className="mt-5"),
         html.H3("Ranking de Localidades", className="mb-3"),
         dcc.Markdown("""
-        Ranking das 15 localidades com maior DPUE (Detecções Por Unidade de Esforço),
+        Ranking de todas as localidades com DPUE (Detecções Por Unidade de Esforço) positivo,
         considerando todos os dados de monitoramento disponíveis.
         """),
         dcc.Loading(
@@ -1180,8 +1072,8 @@ def get_report_layout():
         dcc.Markdown("""
         Serie anual do IAR-P (ou RAI-W), calculado com os pesos manuais da escala DAFOR:
         w(10)=1.00, w(8)=0.80, w(6)=0.60, w(4)=0.10, w(2)=0.04, w(0)=0.
-        O indice e padronizado pelo mesmo denominador do DPUE (Nhours x Uni100m),
-        permitindo comparacao temporal do nivel relativo de abundancia considerando o esforco de monitoramento.
+        O valor exibido segue a mesma normalizacao da aba Dashboard,
+        mantendo o indicador no intervalo 0-10.
         """),
         dcc.Loading(
             dcc.Graph(id='report-raiw-year-chart', figure=create_raiw_by_year_chart()),
@@ -1193,25 +1085,11 @@ def get_report_layout():
         html.H3("Indice de Abundancia Relativa Ponderado por Localidade (IAR-P / RAI-W)", className="mb-3"),
         dcc.Markdown("""
         Distribuicao do IAR-P (RAI-W) por localidade para REBIO Arvoredo e Entorno Imediato,
-        considerando todos os monitoramentos disponiveis. O indice segue a formula:
-        IAR-P = soma_i(w(s_i)) / (Nhours x Uni100m).
+        considerando todos os monitoramentos disponiveis.
+        O calculo usa o mesmo metodo da aba Dashboard (escala 0-10).
         """),
         dcc.Loading(
             dcc.Graph(id='report-raiw-locality-chart', figure=create_raiw_by_locality_chart()),
-            type="circle"
-        ),
-
-        # DAFOR Sum by Locality Section
-        html.Hr(className="mt-5"),
-        html.H3("Soma de Pontuações DAFOR por Localidade", className="mb-3"),
-        dcc.Markdown("""
-        Soma das pontuações DAFOR agrupadas por localidade e categoria da escala DAFOR.
-        Este gráfico apresenta um sumário da abundância do coral-sol em cada localidade monitorada,
-        mostrando a distribuição das categorias de abundância acumuladas ao longo de todos os monitoramentos.
-        Os dados devem ser interpretados com cautela, pois este produto não leva em consideração os esforços diferentes realizados em cada localidade.
-        """),
-        dcc.Loading(
-            dcc.Graph(id='report-dafor-sum-locality', figure=create_dafor_sum_by_locality_chart()),
             type="circle"
         ),
 
@@ -1230,9 +1108,8 @@ def get_report_layout():
         html.Hr(className="mt-5"),
         html.H3("Massa Manejada por dia por ano", className="mb-3"),
         dcc.Markdown("""
-        Razão de remoção de massa de coral por dia de manejo ao longo dos anos, discriminada por método de manejo.
-        O gráfico empilhado mostra a contribuição de cada método (Manual, Manual e Mecanizado, Mecanizado)
-        para a massa total removida por dia de manejo na REBIO Arvoredo e Entorno Imediato.
+        Razão de remoção de massa de coral por dia de manejo ao longo dos anos,
+        considerando a massa total removida e o total de dias com manejo na REBIO Arvoredo e Entorno Imediato.
         """),
         dcc.Loading(
             dcc.Graph(id='report-removal-rate-chart', figure=create_removal_rate_per_day_chart()),
@@ -1243,9 +1120,9 @@ def get_report_layout():
         html.Hr(className="mt-5"),
         html.H3("Massa Manejada Total por Localidade", className="mb-3"),
         dcc.Markdown("""
-        Massa total manejada (kg) por localidade, discriminada por método de manejo.
-        O gráfico empilhado permite comparar o volume total removido em cada localidade
-        e a contribuição relativa dos métodos Manual, Manual e Mecanizado e Mecanizado.
+        Massa total manejada (kg) por localidade.
+        O gráfico permite comparar o volume total removido em cada localidade
+        na REBIO Arvoredo e Entorno Imediato.
         """),
         dcc.Loading(
             dcc.Graph(
@@ -1259,9 +1136,8 @@ def get_report_layout():
         html.Hr(className="mt-5"),
         html.H3("Massa Manejada por Cilindro", className="mb-3"),
         dcc.Markdown("""
-        Razão de massa de coral manejada por cilindro utilizado ao longo dos anos, discriminada por método de manejo.
-        O gráfico empilhado mostra a contribuição de cada método (Manual, Manual e Mecanizado, Mecanizado)
-        para a eficiência do manejo em relação ao consumo de ar por mergulhadores (Coelho-Souza et al., 2025),
+        Razão de massa de coral manejada por cilindro utilizado ao longo dos anos,
+        representando a eficiência geral do manejo em relação ao consumo de ar por mergulhadores (Coelho-Souza et al., 2025),
         considerando apenas eventos com registro válido de cilindros na REBIO Arvoredo e Entorno Imediato.
         """),
         dcc.Loading(
