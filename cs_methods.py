@@ -27,6 +27,22 @@ methods_layout = html.Div([
 
     """),
 
+        html.Figure([
+        html.Img(src="assets/img/cora_sol.png",
+                 style={"width": "50%",
+                        "margin": "30px auto",
+                        "display": "block",
+                        "border-radius": "20px"}),
+        html.Figcaption("Coral-Sol: Tubastraea coccinea.(Marcelo Crivellaro-PACS Arvoredo)", style={
+            "text-align": "center",
+            "color": "#aaa",
+            "font-size": "1rem",
+            "margin-top": "08px"
+        })
+    ]),
+
+
+
     html.Br(),
     html.Br(),
 
@@ -302,26 +318,20 @@ html.Ul([
             "A DPUE fornece uma medida padronizada da frequência de detecção do coral-sol ao longo do tempo, permitindo a comparação entre diferentes períodos e locais de amostragem."
         ]),
         html.Br(),
-        html.Li([
-            html.H3("Índice de Abundância Relativa (IAR-DAFOR)"),
-            "Este indicador é derivado da escala DAFOR, que classifica a abundância do coral-sol em categorias qualitativas (Dominante, Abundante, Frequente, Ocasional, Raro, Ausente)."
-            "Para cada categoria é atribuída a um valor numérico específico. Nos gráficos, o IAR-DAFOR é representado pela soma dos valores de IAR (Índice de Abundância Relativa) por localidade. "
-            "Também é possível observar a distribuição das categorias DAFOR por uma ou mais localidades."
-        ]),
 
-        html.Br(),
         html.Li([
             html.H3("Índice de Abundância Relativa Ponderado (RAI-W)"),
             "Para incorporar a abundância relativa com ênfase nos impactos ecológicos não-lineares da dominância do coral-sol, cada pontuação DAFOR minuto a minuto (s_i ∈ {10, 8, 6, 4, 2, 0}) foi convertida em um peso manual w(s_i) que enfatiza as categorias mais altas. "
             "Os pesos manuais foram determinados por consenso de especialistas e revisão da literatura, garantindo que reflitam o impacto ecológico de densidades variadas de coral-sol. "
             "Os pesos manuais utilizados foram: w(10) = 1,00, w(8) = 0,80, w(6) = 0,60, w(4) = 0,10, w(2) = 0,04, w(0) = 0. "
-            "Os pesos em nível de minuto foram somados e padronizados pelo mesmo denominador usado no DPUE: RAI-W = Σw(s_i) / (N_horas × Uni100m), "
-            "onde N_horas é o esforço total em horas e Uni100m é o comprimento do segmento em unidades de 100 metros."
+            "No dashboard e nos relatórios, o indicador exibido é normalizado para a escala de 0 a 10 pela fórmula: "
+            "RAI-W = 10 × [Σw(s_i) / Nmin], onde Nmin é o total de minutos monitorados. "
+            "Essa normalização mantém o indicador no mesmo intervalo da escala DAFOR e facilita a comparação entre localidades e períodos."
         ]),
 
         html.Br(),
         html.Li([
-            html.H3("DAFOR Espacial"),
+            html.H3("DAFOR Espacial - Em desenvolvimento"),
             "Este indicador espacializa os valores DAFOR ao longo das bordas das localidades monitoradas, criando um mapa de calor de abundância do coral-sol. "
             "A metodologia divide cada localidade em segmentos de 100 metros e calcula a média ponderada dos valores DAFOR dos transectos de monitoramento próximos (dentro de um raio de 50 metros). "
             "A ponderação é feita pelo esforço de amostragem (número de minutos) de cada transecto, garantindo que segmentos com maior esforço de monitoramento contribuam proporcionalmente mais para a média. "
@@ -373,7 +383,7 @@ html.Ul([
 
         html.Br(),
         html.Li([
-            html.H3("Número de monitoramentos por localidade"),
+            html.H3("Trajetos de Número de monitoramentos por localidade"),
             "Este indicador mostra o número de monitoramentos realizados em cada localidade. Ele é útil para avaliar o esforço de monitoramento e identificar áreas que podem necessitar de maior atenção."
         ]),
 
@@ -470,7 +480,7 @@ html.Ul([
         html.A(html.Img(src="assets/img/horus.png", style={"maxHeight": "72px", "width": "auto", "maxWidth": "180px"}),
                href="https://institutohorus.org.br/", target="_blank"),
         html.A(html.Img(src="assets/img/icmbio_br.png", style={"maxHeight": "72px", "width": "auto", "maxWidth": "180px"}),
-               href="https://www.gov.br/icmbio/pt-br", target="_blank"),
+             href="https://www.gov.br/icmbio/pt-br", target="_blank")
     ], style={
         "padding": "16px 0 24px 0",
         "display": "flex",

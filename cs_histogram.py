@@ -9,13 +9,13 @@ def build_histogram_figure(dpue_df):
     """
     Builds a histogram figure for DPUE values using Plotly Express.
     """
-    
+
     import plotly.express as px
 
     # Handle empty or all-NaN DPUE
     if dpue_df.empty or dpue_df["DPUE"].dropna().empty:
         return go.Figure()  # Return an empty figure
-    
+
     min_dpue = dpue_df["DPUE"].min()
     max_dpue = dpue_df["DPUE"].max()
     if pd.isna(min_dpue) or pd.isna(max_dpue):
@@ -28,7 +28,7 @@ def build_histogram_figure(dpue_df):
         x="DPUE",
         title="Densidade de DPUE",
         nbins=nbins,
-        template="plotly_dark",   
+        template="plotly_dark",
     )
 
     fig.update_layout(
@@ -39,8 +39,8 @@ def build_histogram_figure(dpue_df):
         "x": 0,  # Left justify
         "xanchor": "left"
     },
-         
-         height=180, 
+
+         height=180,
          yaxis_title="Contagem",
     )
     return fig
@@ -49,7 +49,7 @@ def build_locality_bar_figure(dpue_df):
     """
     Builds a horizontal bar chart for DPUE values by locality using Plotly Express.
     """
-    
+
     #import plotly.express as px
     #import plotly.graph_objects as go
 
@@ -69,7 +69,7 @@ def build_locality_bar_figure(dpue_df):
     df_sorted = df_sorted[df_sorted["DPUE"] > 0]
     df_sorted = df_sorted.sort_values("DPUE", ascending=False)
     y_col = "name" if "name" in df_sorted.columns else "locality_id"
-    
+
 
     df_sorted[y_col] = df_sorted[y_col].astype(str)
     df_sorted[y_col] = pd.Categorical(df_sorted[y_col], categories=df_sorted[y_col], ordered=True)
@@ -108,7 +108,7 @@ def build_raiw_histogram_figure(raiw_df):
     # Handle empty or all-NaN RAI-W
     if raiw_df.empty or raiw_df["RAIW"].dropna().empty:
         return go.Figure()  # Return an empty figure
-    
+
     min_raiw = raiw_df["RAIW"].min()
     max_raiw = raiw_df["RAIW"].max()
     if pd.isna(min_raiw) or pd.isna(max_raiw):
@@ -121,7 +121,7 @@ def build_raiw_histogram_figure(raiw_df):
         x="RAIW",
         title="Densidade de RAI-W",
         nbins=nbins,
-        template="plotly_dark",   
+        template="plotly_dark",
     )
 
     fig.update_layout(
@@ -132,7 +132,7 @@ def build_raiw_histogram_figure(raiw_df):
             "x": 0,  # Left justify
             "xanchor": "left"
         },
-         height=180, 
+         height=180,
          yaxis_title="Contagem",
          xaxis_title="RAI-W",
     )
@@ -158,7 +158,7 @@ def build_raiw_bar_figure(raiw_df):
     df_sorted = df_sorted[df_sorted["RAIW"] > 0]
     df_sorted = df_sorted.sort_values("RAIW", ascending=False)
     y_col = "name" if "name" in df_sorted.columns else "locality_id"
-    
+
     df_sorted[y_col] = df_sorted[y_col].astype(str)
     df_sorted[y_col] = pd.Categorical(df_sorted[y_col], categories=df_sorted[y_col], ordered=True)
 
@@ -238,8 +238,8 @@ def build_dafor_histogram_figure(dafor_values):
 
 def build_dafor_sum_bar_figure(df_dafor_sum):
     """
-    Builds a stacked horizontal bar chart for the sum of DAFOR values by locality and DAFOR category.
-    Only includes localities with total DAFOR > 0 and excludes the 'Ausente' category.
+    Builds a stacked horizontal bar chart for the mean of DAFOR values by locality and DAFOR category.
+    Only includes localities with total mean DAFOR > 0 and excludes the 'Ausente' category.
     Expects columns: ['locality_id', 'name', 'date', 'DAFOR'] where DAFOR is numeric.
     """
     import pandas as pd
@@ -260,7 +260,7 @@ def build_dafor_sum_bar_figure(df_dafor_sum):
         fig = go.Figure()
         fig.update_layout(
             template="plotly_dark",
-            xaxis_title="Soma DAFOR",
+            xaxis_title="Média DAFOR",
             yaxis_title=None,
             yaxis_showticklabels=False,
             margin={"r":10,"t":20,"l":10,"b":40},
@@ -274,7 +274,7 @@ def build_dafor_sum_bar_figure(df_dafor_sum):
     df["DAFOR_CLASS"] = df["DAFOR_CAT"].map(dafor_num_to_label)
 
     df_grouped = (
-        df.groupby(['name', 'DAFOR_CLASS'], as_index=False)['DAFOR'].sum()
+        df.groupby(['name', 'DAFOR_CLASS'], as_index=False)['DAFOR'].mean()
     )
 
     pivot = df_grouped.pivot(index='name', columns='DAFOR_CLASS', values='DAFOR').fillna(0)
@@ -289,28 +289,28 @@ def build_dafor_sum_bar_figure(df_dafor_sum):
     pivot = pivot.sort_values("total", ascending=False)
 
     df_long = pivot.reset_index().melt(id_vars=["name", "total"], value_vars=category_labels,
-                                       var_name="DAFOR_CLASS", value_name="SUM")
+                                       var_name="DAFOR_CLASS", value_name="MEAN")
 
     df_long['name'] = pd.Categorical(df_long['name'], categories=pivot.index, ordered=True)
     df_long['DAFOR_CLASS'] = pd.Categorical(df_long['DAFOR_CLASS'], categories=category_labels, ordered=True)
 
     fig = px.bar(
         df_long,
-        x="SUM",
+        x="MEAN",
         y="name",
         color="DAFOR_CLASS",
         orientation="h",
         template="plotly_dark",
-        labels={"SUM": "Soma DAFOR por Localidade", "name": "Localidade", "DAFOR_CLASS": "Categoria DAFOR"},
+        labels={"MEAN": "Média DAFOR por Localidade", "name": "Localidade", "DAFOR_CLASS": "Categoria DAFOR"},
         category_orders={"DAFOR_CLASS": category_labels},
-        text="SUM",
+        text="MEAN",
     )
     fig.update_layout(
         barmode="stack",
         yaxis=dict(autorange="reversed", showticklabels=True),
         yaxis_title=None,
         title={
-            "text": "Soma das pontuações DAFOR por localidade (sem categoria Ausente)",
+            "text": "Média das pontuações DAFOR por localidade (sem categoria Ausente)",
             "x": 0,
             "xanchor": "left"
         },
@@ -474,7 +474,7 @@ def build_monitoring_events_bar_figure(events_df):
     """
     Builds a horizontal bar chart showing the number of monitoring events per locality.
     Similar to DPUE bar chart but showing event counts.
-    
+
     Args:
         events_df: DataFrame with locality_id, name, and event_count columns
     """
@@ -488,15 +488,15 @@ def build_monitoring_events_bar_figure(events_df):
             height=300
         )
         return fig
-    
+
     # Sort by event count descending
     df_sorted = events_df[events_df['event_count'] > 0].copy()
     df_sorted = df_sorted.sort_values('event_count', ascending=False)
-    
+
     y_col = "name" if "name" in df_sorted.columns else "locality_id"
     df_sorted[y_col] = df_sorted[y_col].astype(str)
     df_sorted[y_col] = pd.Categorical(df_sorted[y_col], categories=df_sorted[y_col], ordered=True)
-    
+
     fig = px.bar(
         df_sorted,
         x="event_count",
@@ -506,7 +506,7 @@ def build_monitoring_events_bar_figure(events_df):
         labels={"event_count": "Número de Eventos", y_col: "Localidade"},
         text=y_col,
     )
-    
+
     fig.update_traces(insidetextanchor='start')
     fig.update_layout(
         yaxis=dict(autorange="reversed", showticklabels=False),
@@ -520,20 +520,20 @@ def build_monitoring_events_bar_figure(events_df):
         margin={"r":10,"t":35,"l":10,"b":40},
         height=500
     )
-    
+
     return fig
 
 
 def build_monitoring_events_histogram_figure(events_df):
     """
     Builds a histogram showing the distribution of monitoring event counts.
-    
+
     Args:
         events_df: DataFrame with event_count column
     """
     if events_df.empty or events_df["event_count"].dropna().empty:
         return go.Figure()
-    
+
     fig = px.histogram(
         events_df,
         x="event_count",
@@ -541,7 +541,7 @@ def build_monitoring_events_histogram_figure(events_df):
         template="plotly_dark",
         labels={"event_count": "Número de Eventos"}
     )
-    
+
     fig.update_layout(
         bargap=0.1,
         margin={"r":10,"t":35,"l":10,"b":40},
@@ -554,5 +554,5 @@ def build_monitoring_events_histogram_figure(events_df):
         yaxis_title="Contagem",
         xaxis_title="Número de Eventos"
     )
-    
+
     return fig

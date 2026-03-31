@@ -27,9 +27,9 @@ REBIO_LOCALITIES = [
     name_to_id.get("Portinho Norte"),
     name_to_id.get("Portinho Sul"),
     name_to_id.get("Saco da Mulata Norte"),
-    name_to_id.get("Saco da Mulata Sul"), 
+    name_to_id.get("Saco da Mulata Sul"),
     name_to_id.get("Toca da Salema"),# missing costao do saco dagua e saquinho dágua
-   
+
 ]
 REBIO_LOCALITIES = [id for id in REBIO_LOCALITIES if id is not None]
 print("REBIO_LOCALITIES:", REBIO_LOCALITIES)
@@ -61,7 +61,7 @@ GROUP_OPTIONS = [
     {"label": "REBIO (sem Lili) + Entorno Imediato", "value": "rebiogrp_sem_lili_entorno"},
     {"label": "REBIO", "value": "rebiogrp"},
     {"label": "Todas", "value": 0},
-   
+
 ]
 
 locality_options = GROUP_OPTIONS + sorted(
@@ -74,7 +74,7 @@ cs_controls = dbc.Row([
     html.Img(id="logo", src=app.get_asset_url("logo.png"), style={'width':'100%'}),
     html.H2("Painel de Monitoramento do Coral-Sol", style={"margin-top": "30px"}),
     html.H4(
-        """Utilize este dashboard para explorar os dados do monitoramento 
+        """Utilize este dashboard para explorar os dados do monitoramento
         da invasão do coral-sol na REBIO Arvoredo e Entorno. """
     ),
     html.P([
@@ -120,14 +120,13 @@ cs_controls = dbc.Row([
         id="indicator-dropdown",
         options=[
             {"label": "DPUE", "value": "dpue"},
-            {"label": "IAR-DAFOR", "value": "dafor"},
             {"label": "RAI-W (Índice Ponderado)", "value": "raiw"},
-            {"label": "DAFOR ESPACIAL", "value": "dafor_spatial"},
+            {"label": "DAFOR ESPACIAL (em desenvolvimento)", "value": "dafor_spatial"},
             {"label": "OCORRÊNCIAS", "value": "occurrences"},
             {"label": "MASSA MANEJADA (KG)", "value": "management"},
             {"label": "ÚLTIMO MANEJO (DIAS)", "value": "days_since_management"},
             {"label": "ÚLTIMO MONITORAMENTO (DIAS)", "value": "days_since_monitoring"},
-            {"label": "NÚMERO DE MONITORAMENTOS", "value": "monitoring_intensity"},
+            {"label": "Trajetos e número de monitoramentos", "value": "monitoring_intensity"},
         ],
         value="dpue",
         placeholder="Select Indicator"
@@ -141,7 +140,7 @@ cs_controls = dbc.Row([
         value=[],  # Empty by default (boundary hidden)
         style={"margin-bottom": "20px"}
     ),
-])
+], className="left-filters")
 
 def filter_localities(selected_localities, df):
     if selected_localities is None or 0 in selected_localities:

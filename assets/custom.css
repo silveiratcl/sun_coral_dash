@@ -48,3 +48,80 @@ div.tab--selected {
 .Select-arrow-zone, .Select-arrow {
     color: #fff !important;
 }
+
+/* Left panel filter controls: enforce dark backgrounds across Dash + Bootstrap */
+#time-range-dropdown .Select-control,
+#locality-dropdown .Select-control,
+#indicator-dropdown .Select-control,
+.DateRangePickerInput,
+.DateInput,
+.DateInput_input,
+input,
+select,
+textarea {
+    background-color: #222 !important;
+    color: #fff !important;
+    border-color: #444 !important;
+}
+
+.DateInput_input::placeholder,
+input::placeholder,
+textarea::placeholder {
+    color: #bbb !important;
+}
+
+.DateRangePickerInput_arrow_svg,
+.DateRangePickerInput_clearDates_svg,
+.DateRangePickerInput_calendarIcon_svg {
+    fill: #fff !important;
+}
+
+/* Strong scoped overrides for the left filter panel */
+.left-filters .form-control,
+.left-filters .form-select,
+.left-filters .Select-control,
+.left-filters .Select-menu-outer,
+.left-filters .Select-menu,
+.left-filters .Select-option,
+.left-filters .Select-value,
+.left-filters .Select-value-label,
+.left-filters .DateRangePickerInput,
+.left-filters .DateInput,
+.left-filters .DateInput_input,
+.left-filters .DateInput_input_1,
+.left-filters .DateInput_input__focused,
+.left-filters input,
+.left-filters select,
+.left-filters textarea {
+    background-color: #222 !important;
+    color: #fff !important;
+    border-color: #444 !important;
+}
+
+.left-filters .Select-placeholder,
+.left-filters .DateInput_input::placeholder,
+.left-filters input::placeholder,
+.left-filters textarea::placeholder {
+    color: #bbb !important;
+}
+
+/* Dash 3 Dropdown (react-select newer class names) */
+.left-filters [class*="Select__control"],
+.left-filters [class*="Select__menu"],
+.left-filters [class*="Select__menu-list"],
+.left-filters [class*="Select__option"],
+.left-filters [class*="Select__single-value"],
+.left-filters [class*="Select__multi-value"],
+.left-filters [class*="Select__multi-value__label"],
+.left-filters [class*="Select__input-container"],
+.left-filters [class*="Select__placeholder"],
+.left-filters [class*="Select__indicator"],
+.left-filters [class*="Select__value-container"] {
+    background-color: #222 !important;
+    color: #fff !important;
+    border-color: #444 !important;
+}
+
+.left-filters [class*="Select__placeholder"] {
+    color: #bbb !important;
+}
